@@ -1,3 +1,4 @@
+import {ARMORS} from './equipment.js';
 import {storageSplit,customStorage,equipmentStorage} from './storage.js';
 import {stateOf} from './world.js';
 import {RESOURCE_KEYS,balance} from './economy.js';
@@ -16,10 +17,10 @@ export function warehouseStock(root,civ,scope='warehouse'){
 }
 
 export function equipmentRows(s,category){
- const tools=category==='tools',items=s[category],names=tools?TOOL_NAMES:category==='weapons'?WEAPON_NAMES:VEHICLE_NAMES;
+ const tools=category==='tools',items=s[category],names=tools?TOOL_NAMES:category==='weapons'?WEAPON_NAMES:category==='armors'?Object.fromEntries(Object.entries(ARMORS).map(([k,v])=>[k,v.name])):VEHICLE_NAMES;
  const assigned=new Set(s.agents.filter(a=>a.alive).flatMap(a=>['wood','stone','farm'].map(k=>a.equipment[k]).filter(Boolean)));
  const leased=new Set(s.agents.filter(a=>a.alive&&a.journey).map(a=>a.journey.vehicle));
- const rows=new Map(),locations=equipmentStorage(s),armed=new Set(s.agents.filter(a=>a.alive).map(a=>a.equipment.weapon));
+ const rows=new Map(),locations=equipmentStorage(s),armed=new Set(s.agents.filter(a=>a.alive).map(a=>a.equipment[category==='armors'?'armor':'weapon']));
  for(const item of items){const key=tools?item.job:item.type,row=rows.get(key)||{key,name:names[key]||key,total:0,available:0,used:0,pending:0,archive:0,condition:0,healthy:0,stored:0,ground:0};row.total++;
   const healthy=item.condition>0&&(!tools||item.status==='ready');
   if(healthy||tools&&item.status==='prototype'&&item.condition>0){const location=locations.stored[category].has(item.id)?'stored':locations.carried[category].has(item.id)?'carried':'ground';row[location]=(row[location]||0)+1;}

@@ -1,3 +1,4 @@
+import {SPECIES,combatStats,routeThreat} from './wildlife.js';
 import {housingCapacity} from './shelter.js';
 import {researchCandidates,nextResearch,researchStatus,researchWork} from './research.js';
 import {equipmentActions,equipmentWork,weaponPower} from './equipment.js';
@@ -24,9 +25,9 @@ export function targets(s){const p=living(s).length,c=civic(s),d=nextDiscovery(s
 export function buildingNeeds(s){
  const p=living(s).length,health=living(s).reduce((n,a)=>n+a.health,0)/Math.max(1,p),capacity=housingCapacity(s),c=civic(s);
  const stockPressure=s.food>s.buildings.warehouse*345||s.wood>s.buildings.warehouse*550||s.stone>s.buildings.warehouse*550;
- const gearStamp=[s.day,s.nextToolId,s.nextWeaponId,s.nextVehicleId].join(':');if(s._storageDemand?.stamp!==gearStamp)Object.defineProperty(s,'_storageDemand',{value:{stamp:gearStamp,count:s.tools.filter(t=>t.condition>0&&['ready','prototype'].includes(t.status)).length+s.weapons.filter(w=>w.condition>0).length+s.vehicles.filter(v=>v.condition>0).length},enumerable:false,configurable:true});
+ const gearStamp=[s.day,s.nextToolId,s.nextWeaponId,s.nextArmorId,s.nextVehicleId].join(':');if(s._storageDemand?.stamp!==gearStamp)Object.defineProperty(s,'_storageDemand',{value:{stamp:gearStamp,count:s.tools.filter(t=>t.condition>0&&['ready','prototype'].includes(t.status)).length+s.weapons.filter(w=>w.condition>0).length+s.vehicles.filter(v=>v.condition>0).length},enumerable:false,configurable:true});
  const storagePressure=stockPressure||s._storageDemand.count>s.buildings.warehouse*40;
- const needs=[{key:'warehouse',score:s.buildings.warehouse===0?105:storagePressure?60:0,reason:'Melindungi persediaan dan peralatan dari kerusakan di tanah.'},{key:'hut',score:capacity<=p?65:capacity-p<3?30:0,reason:'Warga tanpa rumah mudah sakit, kurang pulih saat tidur dan mudah marah.'},{key:'farm',score:Math.max(0,(p/4-s.buildings.farm)*20)+(s.food<p*4&&s.buildings.farm===0?50:0),reason:'Panen membutuhkan lahan dan petani.'},{key:'well',score:s.buildings.well===0&&p>=6?35:health<65&&s.buildings.well<2?20:0,reason:'Warga membutuhkan air dan pemulihan.'},{key:'school',score:s.buildings.school===0&&s.tech>=25?40:s.buildings.school<2&&s.tech>=150?10:0,reason:'Melatih peneliti dan generasi berikutnya.'}];
+ const needs=[{key:'warehouse',score:s.buildings.warehouse===0?105:storagePressure?60:0,reason:'Melindungi persediaan dan peralatan dari kerusakan di tanah.'},{key:'hut',score:capacity<=p?65:capacity-p<3?30:0,reason:'Warga tanpa rumah mudah sakit, kurang pulih saat tidur dan mudah marah.'},{key:'farm',score:Math.max(0,(p/4-s.buildings.farm)*20)+(s.food<p*4&&s.buildings.farm===0?110:0),reason:'Panen membutuhkan lahan dan petani.'},{key:'well',score:s.buildings.well===0&&p>=6?35:health<65&&s.buildings.well<2?20:0,reason:'Warga membutuhkan air dan pemulihan.'},{key:'school',score:s.buildings.school===0&&s.tech>=25?40:s.buildings.school<2&&s.tech>=150?10:0,reason:'Melatih peneliti dan generasi berikutnya.'}];
  for(const key of ['furnace','workshop','generator','observatory','shipyard'])needs.push({key,score:s.buildings[key]===0&&c?.discoveries.includes(BUILDINGS[key].requires)?55:0,reason:BUILDINGS[key].tip});
  for(const d of researchCandidates(s).slice(0,8))if(!s.buildings[d.facility]&&!needs.some(n=>n.key===d.facility))needs.push({key:d.facility,score:42+(d.id==='agriculture'?10:0),reason:'Fasilitas untuk riset '+d.name});
  return needs.map(n=>({...n,score:s.buildings[n.key]>=BUILDING_LIMIT?0:n.score})).sort((a,b)=>b.score-a.score);
@@ -40,10 +41,10 @@ function productionGoal(s,key,target){
  if(key==='fuel'){if(s.wood<2)return {kind:'materials',actions:['wood'],reason:'Kayu untuk bahan bakar'};return {kind:'fuel',actions:['fuel','useResource'],reason:`Bahan bakar ${Math.floor(balance(s,key))}/${target}`};}
  if(key==='alloy'){if(balance(s,'metal')<2)return productionGoal(s,'metal',3);if(balance(s,'fuel')<1)return productionGoal(s,'fuel',2);return {kind:'alloy',actions:['alloy'],reason:`Paduan ${Math.floor(balance(s,key))}/${target}`};}
  if(key==='energy'){if(balance(s,'fuel')<1)return productionGoal(s,'fuel',2);return {kind:'energy',actions:['generate','useResource'],reason:`Energi ${Math.floor(balance(s,key))}/${target}`};}
- return {kind:key==='food'?'food':'materials',actions:key==='food'?['farm','fish','forage','useResource']:key==='fiber'||key==='bone'?['forage']:[key],reason:`${key} ${Math.floor(balance(s,key))}/${Math.ceil(target)}`};
+ return {kind:key==='food'?'food':'materials',actions:key==='food'?['farm','fish','forage','hunt','useResource']:key==='fiber'||key==='bone'?['forage']:[key],reason:`${key} ${Math.floor(balance(s,key))}/${Math.ceil(target)}`};
 }
 export function goal(s){
- const c=civic(s),p=living(s);if(s.food<Math.max(6,p.length*3))return {kind:'food',actions:['farm','fish','forage','useResource'],reason:'Cadangan pangan menipis'};
+ const c=civic(s),p=living(s),nextGeneration=housingCapacity(s)>s.agents.filter(a=>a.alive).length&&p.filter(a=>a.age>=18&&a.age<=45).length>=2,foodReserve=Math.max(6,nextGeneration?p.length*5+8:p.length*3);if(s.food<foodReserve&&(!s.project||s.food<p.length)&&(!needsExploration(s)||s.food<p.length*1.5))return {kind:'food',actions:['farm','fish','forage','hunt','useResource'],reason:'Cadangan pangan menipis'};
  if(c?.war)return {kind:'war',actions:['defend','forgeWeapon'],reason:'Perang memerlukan penjaga dan logistik'};
  if(s.project)return {kind:'building',actions:['build','enchantBuild'],reason:'Menyelesaikan '+BUILDINGS[s.project.key].name};
  if(needsExploration(s))return {kind:'materials',actions:['explore'],reason:'Menjelajah mencari deposit baru'};
@@ -65,8 +66,9 @@ export function workAvailable(s,a){
  const gifted=a.arcaneSensitivity>=75;if(s.buildings.arcaneSanctum&&c&&((!c.magic&&gifted&&a.skills.research>=20&&s.tech>=40&&nearbySource(s))||(c.magic&&a.skills.studyMagic<20&&a.skills.research>=10&&(nearbySource(s)||adults(s).some(b=>b.skills.studyMagic>=20)))))list.push('studyMagic');if(c?.magic&&(gifted||a.skills.studyMagic>=20)){if(nearbySource(s)&&balance(s,'mana')<100)list.push('channel');if(balance(s,'mana')>=2){if(living(s).some(b=>b.health<85))list.push('heal');if(s.project)list.push('enchantBuild');}}
  if(known(s,'electronics')&&known(s,'astronomy')&&s.buildings.observatory&&balance(s,'energy')>=.5&&c.signalProgress<100)list.push('observe');if(c?.ship&&c.ship.progress<c.ship.required&&known(s,'spaceflight')&&s.buildings.shipyard)list.push('assembleShip');if(c?.war&&s.food>=.5&&a.health>=35)list.push('defend');if(s.buildings.school&&a.skills.research>=20&&living(s).some(b=>b.id!==a.id&&b.skills.research<a.skills.research*.7))list.push('teach');if(known(s,'herbalMedicine')&&s.buildings.bioLab&&s.food>=1&&living(s).some(p=>p.health<90))list.push('treat');if(known(s,'forestry')&&s.buildings.ecologyStation&&(s.world||s._context)&&s.wood>=3)list.push('restore');if(known(s,'mindfulness')&&s.buildings.mindHall)list.push('meditate');if(known(s,'administration')&&s.buildings.civicHall&&s.food>=.2)list.push('govern');return list;
 }
-export function needBonus(s,a,key,g=goal(s)){let n=g.actions.includes(key)?(g.kind==='war'?10:5):0;
- if((a.energy<35||a.health<40)&&key==='rest')n+=5;if(!a.home&&['build','enchantBuild'].includes(key)&&s.project?.key==='hut')n+=2;if(a.hunger>55&&key==='eat')n+=5;
+export function needBonus(s,a,key,g=goal(s)){if(a.journey?.encounter){const beast=rootOf(s).world.beasts.find(b=>b.id===a.journey.encounter),stats=combatStats(s,a),danger=!a.equipment.weapon||!SPECIES[beast.species].passive&&!a.equipment.armor||stats.attack<beast.defense||a.health<45||beast.attack-stats.defense*.6>a.health*.4;if(key==='flee')return danger?10:0;return ['hunt','defend'].includes(key)?3:0;}let n=g.actions.includes(key)?(g.kind==='war'?10:5):0;
+ if((a.energy<35||a.health<40)&&key==='rest')n+=5;if(!a.home&&['build','enchantBuild'].includes(key)&&s.project?.key==='hut')n+=2;if(a.hunger>55&&key==='eat')n+=5;if(a.journey){if(key==='travel')n+=3;if(key==='returnHome'&&(a.health<45||a.hunger>75||routeThreat(s,a,a.journey.target,a.journey.position)))n+=7;}
+ if(key==='forgeArmor'&&!a.equipment.armor)n+=4;
  if(key==='craft'&&(s.tools.some(t=>t.status==='prototype'&&(t.maker??t.owner)===a.id)||adults(s).some(b=>['wood','stone','farm'].some(job=>b.skills[job]>10&&!b.equipment[job]))))n+=3;
  if(key==='share'&&s.food<living(s).length*3&&a.stash.food>3)n+=8;
  if(key==='studyMagic'&&!civic(s)?.magic)n+=4;if(key==='heal'&&living(s).some(b=>b.health<45))n+=7;if(key==='observe')n+=5;
@@ -78,7 +80,7 @@ export function needBonus(s,a,key,g=goal(s)){let n=g.actions.includes(key)?(g.ki
 }
 export function runResearch(s,a,scale,{log}){return researchWork(s,a,scale,log);}
 export function runWork(s,a,key,scale,{log}){
- if(['forgeWeapon','makeVehicle'].includes(key))return equipmentWork(s,a,key,scale,log);
+ if(['forgeArmor','forgeWeapon','makeVehicle'].includes(key))return equipmentWork(s,a,key,scale,log);
  if(key==='restore')return restoreNature(s,a,scale);
  if(['diplomacy','translate'].includes(key))return cultureWork(s,a,key);
  const c=civic(s);if(known(s,'automation')&&['smelt','alloy','generate','fuel'].includes(key))scale*=1.25;if(known(s,'runeCraft')&&['heal','enchantBuild','channel'].includes(key))scale*=1.15;let reward=0,energy=5,note='',target=null;
