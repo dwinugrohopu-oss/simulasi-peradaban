@@ -46,3 +46,16 @@ Optimasi pencarian alat dan penemuan mempertahankan hasil serta Q yang persis sa
 Cakupan regresi demografi: seed 1 selama 7.200 hari dan enam seed lain selama 2.500 hari; uji terpisah seed 44 juga mencapai 7.200 hari. Cakupan tahun penuh tetap dipisahkan dari unit penjadwalan waktu offline agar perubahan ukuran penduduk tidak membuat tes batas waktu menjalankan dua simulasi besar yang identik.
 
 Verifikasi akhir: 83 tes lulus tanpa kegagalan atau skip; build frontend berhasil. UI memakai pengujian DOM tiruan, bukan verifikasi visual browser/HP.
+
+
+## Pembaruan 0.8 — riset bercabang dan geografi resource
+
+Riset kini memiliki 40 penemuan/10 cabang, fasilitas per cabang, biaya bahan, dua peneliti per fasilitas/hari, maksimal enam proyek aktif dan penalti koordinasi paralel. Kajian dasar juga memakai kapasitas fasilitas. Perubahan umur, kecenderungan ideologi dan pekerjaan tidak membentuk pekerja/perwakilan baru. Awal dunia baru berisi 20 warga nyata per planet, masing-masing dengan profil unik; fixture kecil pengujian lama tetap memakai enam warga agar skenario regresi tidak bergantung pada sensus awal.
+
+Geografi berisi 108 deposit dan 480 petak wilayah. Pengumpulan harus berangkat, mengambil stok dan pulang; senjata/kendaraan membutuhkan bahan serta pekerjaan. Riset memiliki manfaat yang ditampilkan di UI dan diterapkan dalam produksi, pertanian, perawatan, sihir, riset, diplomasi atau pemerintahan. Bijih menggantikan batu sebagai masukan peleburan.
+
+Pengujian baru memeriksa konservasi stok/muatan termasuk penimbunan pribadi; regenerasi terbatas; pemakaian kendaraan satu per perjalanan; fasilitas, biaya sekali dan tenaga riset; perbedaan biaya koordinasi; eksplorasi sebelum penemuan resource; perang deposit sebelum/sesudah kedatangan pasukan; penangkapan petak wilayah; efek riset; migrasi simpanan/progres; penolakan data rusak; tombol lapisan peta tanpa membuka drawer; endpoint modul baru. Save v6 dari implementasi terdahulu juga dibaca dan divalidasi kembali.
+
+Jarak masih garis lurus, bukan pathfinding medan. Perang selain sengketa deposit tetap memakai model pertahanan permukiman sebelumnya. Model penelitian/jalur penemuan dan skala pemerintahan adalah aturan permainan. UI diuji dengan DOM/canvas tiruan; verifikasi visual pada perangkat HP dan panggilan Gemini dengan API key nyata belum dilakukan. Perhitungan offline dunia besar masih dapat memerlukan waktu lama.
+
+Verifikasi 0.8: seluruh 99 tes lulus pada pengujian regresi dan pengulangan tes yang disesuaikan; build frontend berhasil. Uji lintas seed mencakup satu dunia 7.200 hari dan enam dunia 2.500 hari. Skenario demografi tambahan memakai 3.000 hari; imigrasi/emigrasi dibandingkan antarseluruh permukiman dan sensus cocok dengan kelahiran/kematian. Dunia baru seed 42 dengan 40 warga dijalankan 1.500 hari: 123 warga hidup, empat permukiman dan 39/35/32/28 penemuan; seluruh save lolos validasi. Angka ini contoh seed, bukan jaminan perkembangan semua dunia.

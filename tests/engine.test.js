@@ -1,6 +1,7 @@
+import {newGame} from './fixtures.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newGame,tick,advance,DAY_MS,OFFLINE_CAP,learn,validateSave,population,startProject,available,observation,selectAction,row,epsilon,worldPopulation,elapsedBudget} from '../engine.js';
+import {tick,advance,DAY_MS,OFFLINE_CAP,learn,validateSave,population,startProject,available,observation,selectAction,row,epsilon,worldPopulation,elapsedBudget} from '../engine.js';
 test('deterministic simulations reproduce the same seed and learned model',()=>{const a=newGame(42,0),b=newGame(42,0);for(let i=0;i<500;i++){tick(a);tick(b);}assert.deepEqual(a,b);assert.ok(a.totalSteps>0);assert.ok(a.agents.some(a=>Object.values(a.q).some(r=>Object.values(r).some(v=>v!==0))));});
 test('Q learning uses reward plus discounted next-state value',()=>{const a=newGame(1,0).agents[0];row(a,'next').rest=8;learn(a,'state','wood',2,'next',['rest'],false,.2);assert.equal(a.q.state.wood,1.6);assert.equal(a.steps,1);learn(a,'state','wood',-5,'next',['rest'],true,1);assert.equal(a.q.state.wood,-5);});
 test('greedy selection uses learned action values in current state',()=>{const s=newGame(31,0),a=s.agents[0];a.steps=100000;row(a,observation(s,a)).wood=20;let count=0;for(let i=0;i<200;i++)if(selectAction(s,a)==='wood')count++;assert.ok(count>175);assert.equal(epsilon(a),.05);});

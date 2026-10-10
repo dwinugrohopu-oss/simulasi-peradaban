@@ -1,6 +1,7 @@
+import {newGame} from './fixtures.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newGame,log,applyObject} from '../engine.js';
+import {log,applyObject} from '../engine.js';
 import {localDraft} from '../world-schema.js';
 import {createNotices,classifyNotice} from '../notifications.js';
 test('notices distinguish completed achievements, major events and ordinary work',()=>{

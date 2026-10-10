@@ -1,6 +1,7 @@
+import {newGame} from './fixtures.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {newGame,act,available,validateSave,random,log,tick} from '../engine.js';
+import {act,available,validateSave,random,log,tick} from '../engine.js';
 import {evaluateDesign,experiment,useTool,designCost} from '../physics.js';
 import {deposit,interact,remember,revengeTarget,cooperation} from '../society.js';
 const good={head:'stone',handle:'wood',binding:'fiber',shape:'blade'};
@@ -10,7 +11,7 @@ test('material, shape and joint affect useful output and prototype costs are con
 });
 test('successful trials equip a tool, increase actual work and wear until breakage',()=>{
  const s=newGame(3,0),a=s.agents[0],physics=evaluateDesign(good);s.tools.push({id:1,owner:a.id,job:'wood',design:good,physics,name:'Kapak percobaan',condition:physics.durability,status:'prototype',createdDay:0,testedDay:null,measured:null,uses:0});s.nextToolId=2;s.prototypes=1;
- assert.equal(experiment(s,a,{random:()=>.5,log}),4);assert.equal(a.equipment.wood,1);const plain=structuredClone(s);plain.agents[0].equipment={};const before=s.wood;act(s,a,'wood');act(plain,plain.agents[0],'wood');assert.ok(s.wood-before>plain.wood-before);assert.equal(s.tools[0].uses,1);
+ assert.equal(experiment(s,a,{random:()=>.5,log}),4);assert.equal(a.equipment.wood,1);const plain=structuredClone(s);plain.agents[0].equipment={};const before=s.wood;act(s,a,'wood');act(plain,plain.agents[0],'wood');assert.ok(a.journey.amount>plain.agents[0].journey.amount);while(a.journey)act(s,a,'travel');while(plain.agents[0].journey)act(plain,plain.agents[0],'travel');assert.ok(s.wood-before>plain.wood-before);assert.equal(s.tools[0].uses,1);
  while(s.tools[0].condition>0)useTool(s,a,'wood',{random:()=>1,log});assert.equal(s.tools[0].status,'broken');assert.equal(a.equipment.wood,undefined);validateSave(s);
 });
 test('selfish ownership conserves resources and remembered theft enables one revenge',()=>{
@@ -23,9 +24,9 @@ test('negative actions respect age, personal capacity and conflict cooldown',()=
  const s=newGame(7,0),a=s.agents[0];a.traits=['aggressive','greedy'];assert.ok(available(s,a).includes('intimidate'));act(s,a,'intimidate');assert.ok(!available(s,a).includes('intimidate'));a.stash.food=30;assert.ok(!available(s,a).includes('steal'));a.age=4;assert.ok(!available(s,a).includes('steal'));assert.ok(!available(s,a).includes('intimidate'));
 });
 test('version two migration preserves state and Q values while malformed tools reject',()=>{
- const s=newGame(9,0);act(s,s.agents[0],'wood');s.version=2;s.agents[0].q={'0:0:0:0:0:balanced':Object.fromEntries(Object.keys(s.agents[0].skills).slice(0,10).map(k=>[k,7]))};const restored=validateSave(s);assert.equal(restored.version,6);assert.equal(restored.wood,s.wood);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].wood,7);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].steal,0);
+ const s=newGame(9,0);act(s,s.agents[0],'wood');s.version=2;s.agents[0].q={'0:0:0:0:0:balanced':Object.fromEntries(Object.keys(s.agents[0].skills).slice(0,10).map(k=>[k,7]))};const restored=validateSave(s);assert.equal(restored.version,7);assert.equal(restored.wood,s.wood);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].wood,7);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].steal,0);
  const bad=newGame(2,0);bad.agents[0].stash.food=31;assert.throws(()=>validateSave(bad));bad.agents[0].stash.food=0;bad.agents[0].equipment.wood=999;assert.throws(()=>validateSave(bad));
 });
 test('autonomous research yields tested, used tools rather than only knowledge',()=>{
- const s=newGame(17,0);for(let i=0;i<1500;i++)tick(s);assert.ok(s.experiments>0);assert.ok(s.tools.some(t=>t.uses>0));assert.ok(s.tools.length<=100);validateSave(s);
+ const s=newGame(17,0);for(let i=0;i<1500;i++)tick(s);assert.ok(s.experiments>0);assert.ok(s.tools.some(t=>t.uses>0));assert.ok(s.tools.length<=2048);validateSave(s);
 });

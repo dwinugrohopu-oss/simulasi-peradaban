@@ -1,5 +1,6 @@
+import {BUILDINGS} from './rules.js';
 export const OBJECT_KINDS=['river','forest','quarry','ruins','building','event','resource','magic'];
-export const BUILDING_KEYS=['none','hut','farm','school','well','furnace','workshop','generator','observatory','shipyard','habitat'];
+export const BUILDING_KEYS=['none',...Object.keys(BUILDINGS)];
 export const EVENT_KEYS=['none','drought','flood','festival','disease','war','rebellion','contact','awakening','custom'];
 export const OBJECT_LABELS={river:'Sungai',forest:'Hutan',quarry:'Tambang batu',ruins:'Reruntuhan',building:'Bangunan',event:'Peristiwa',resource:'Resource khusus',magic:'Sumber sihir'};
 export const OBJECT_SCHEMA={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:OBJECT_KINDS},name:{type:'string'},description:{type:'string'},x:{type:'number'},y:{type:'number'},richness:{type:'integer'},intensity:{type:'integer'},duration:{type:'integer'},building:{type:'string',enum:BUILDING_KEYS},event:{type:'string',enum:EVENT_KEYS},amount:{type:'integer'}},required:['kind','name','description','x','y','richness','intensity','duration','building','event','amount']};

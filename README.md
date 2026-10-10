@@ -1,8 +1,26 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.7.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.8.0**. Dua planet dimulai dengan masing-masing 20 warga nyata: manusia dan alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
+
+## Riset, perjalanan dan lapisan dunia (0.8)
+
+Dunia baru berisi 40 warga nyata dengan 20 profil ideologi unik per planet. Profil memakai lima kecenderungan (kebersamaan, kebebasan, otoritas, teknologi, ekologi); kebiasaan kerja tetap menjadi dasar utama pemerintahan. Profesi bersifat generik dan mengikuti kegiatan serta penemuan: pekerja pengumpulan, operator lapangan, perajin, teknisi produksi, peneliti cabang, tenaga medis, petugas diplomasi dan personel militer.
+
+Ada **40 penemuan dalam 10 cabang**, dengan prasyarat lintas cabang. Sihir memakai Sanggar arkanum; mekanik Laboratorium mekanik; biotik Kebun simbiosis; bioengineering Laboratorium hayati; mental Balai mental; lingkungan Stasiun ekologi; peperangan Arsenal; sosial Balai masyarakat; diplomatis Balai diplomasi; pemerintahan Balai pemerintahan. Biotik melatih tubuh/simbiosis, sedangkan bioengineering mengembangkan pengobatan, gen dan pertanian. Dampak tiap penemuan ditampilkan pada panel riset.
+
+Setiap fasilitas menampung dua peneliti per hari. Maksimal enam proyek dapat aktif bersamaan. Bahan dibayar sekali saat proyek dimulai; tidak ada progres jika tidak dikerjakan. Kecepatan per peneliti dibagi `1 + 0,15 × (jumlah proyek aktif − 1)`, sehingga paralelisme membagi tenaga dan menambah biaya koordinasi. Proyek dapat berhenti sementara karena peneliti sedang makan, istirahat atau bepergian.
+
+Sebanyak 108 deposit tersebar di tiga planet. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk gudang setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
+
+Kereta, kendaraan bermotor dan kendaraan biotik membutuhkan penemuan, fasilitas, bahan dan perakitan. Kendaraan dipakai satu perjalanan pada satu waktu, mempercepat jarak tempuh, meningkatkan muatan dan aus. Kendaraan bermotor membayar lima bahan bakar per keberangkatan. Bekal diambil saat berangkat dan sisanya dikembalikan setelah pulang. Senjata juga dibuat dengan bahan, dipakai satu penjaga per hari dan aus.
+
+Kelangkaan mendorong eksplorasi. Deposit milik pemerintahan lain membutuhkan hubungan bersahabat untuk diakses dengan pembayaran pangan. Jika akses tertutup, kebutuhan resource dapat memperburuk hubungan dan memicu perang, setelah syarat populasi/logistik terpenuhi. Pasukan harus berjalan ke deposit; sepuluh hari keunggulan kumulatif di front memindahkan petak wilayah beserta depositnya. Gencatan senjata membuat pasukan pulang. Konflik tidak dijamin terjadi pada setiap seed.
+
+Tombol **Batas**, **Bahasa**, **Deposit** tersedia langsung pada layar dunia. Batas mengikuti petak yang dimiliki peradaban/polity; label menampilkan jenis serta kekuatan pemerintahan. Lapisan bahasa menampilkan nama dan tahap bahasanya. Deposit yang sudah ditemukan dapat diketuk untuk melihat stok, sifat terbarukan dan pemilik. Posisi warga/perjalanan terlihat di peta.
+
+Simpanan versi 1–6 dimigrasikan ke versi 7 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan awal 20 warga per planet, pilih Dunia baru setelah mengunduh cadangan bila diperlukan.
 
 ## Tampilan utama untuk HP
 
@@ -20,8 +38,8 @@ Event penting, bangunan selesai, penemuan, sihir, kontak, perpecahan, perang, pe
 | Rumah dan kesehatan | Rumah menyediakan tiga tempat; habitat menyediakan empat. Tempat kru tetap dihitung agar tidak terisi kelahiran saat mereka pergi. Sumur membantu pemulihan; kesehatan rendah mengurangi efisiensi pekerjaan. |
 | Alat | Warga merancang dan menguji prototipe dengan bahan nyata. Dua alat berhasil membuka bukti metalurgi; pemakaian alat dan peleburan membuka bukti mesin. Alat diberikan kepada pekerja yang membutuhkan, aus dan dapat rusak. Logam serta paduan menjadi pilihan material setelah ditemukan. |
 | Industri | Tungku + metalurgi: kayu → bahan bakar; batu + bahan bakar → logam. Bengkel + mesin: logam + bahan bakar → paduan. Pembangkit + listrik: bahan bakar → energi. Setiap tahap perlu operator. |
-| Penelitian | Pengetahuan, keahlian, penemuan terdahulu, bukti praktik dan bahan harus cukup. Peneliti memenuhi pekerjaan riset bertahap; bahan dibayar saat riset dimulai. Balai belajar mempercepat penelitian dan memungkinkan mengajar generasi berikutnya. |
-| Sihir | Warga berbakat dengan kepekaan ≥75, penelitian ≥20 dan pengetahuan desa ≥40 mempelajari sumber dekat desa sampai pengamatan 60. Setelah ditemukan, warga mengumpulkan mana, menyembuhkan seorang pasien atau membantu proyek dengan tindakan terpisah. Warga lain bisa berlatih lewat sumber/mentor. |
+| Penelitian | Pengetahuan, keahlian, penemuan terdahulu, bukti praktik dan bahan harus cukup. Peneliti memenuhi pekerjaan riset bertahap; bahan dibayar saat riset dimulai. Setiap cabang membutuhkan fasilitasnya sendiri. Balai belajar mempercepat penelitian dan memungkinkan mengajar generasi berikutnya. |
+| Sihir | Warga berbakat dengan kepekaan ≥75, penelitian ≥20 dan pengetahuan desa ≥40 mempelajari sumber dekat desa sampai proyek Dasar arkanum di Sanggar arkanum selesai. Riset sihir juga memakai biaya bahan dan tenaga kerja. Setelah ditemukan, warga mengumpulkan mana, menyembuhkan seorang pasien atau membantu proyek dengan tindakan terpisah. Warga lain bisa berlatih lewat sumber/mentor. |
 | Masyarakat | Sifat, persediaan pribadi, reputasi, hubungan dan ingatan memengaruhi berbagi, pencurian, manipulasi, intimidasi, dendam dan kerja sama. Kelompok yang mempunyai keluhan bersama dapat memisahkan diri sambil membawa bekal, pengalaman, alat dan ingatan. |
 | Perang | Hubungan buruk, kedekatan wilayah, warga dan logistik memungkinkan perang. Penjaga memakai hari kerja, pangan dan energi; pertempuran melukai warga serta memengaruhi produktivitas dan suasana. Kedua pihak menyelesaikan giliran sebelum pertempuran. |
 | Perpindahan | Pendatang berasal dari peradaban lain yang benar-benar ada. Warga, bekal, alat dan kemampuan berpindah; mereka tidak dibuat atau dihapus begitu saja. Tidak ada tujuan yang cocok berarti warga tetap tinggal. |
@@ -44,7 +62,7 @@ Aturan kolektif memilih kebutuhan/proyek; Q-learning mempelajari keputusan indiv
 
 ## Perkembangan zaman
 
-Urutan riset: pertanian → metalurgi → mesin → astronomi → listrik → elektronika → roket → penunjang kehidupan → penerbangan antariksa → habitat planet. Syarat rinci dan pekerjaan riset ditampilkan pada panel penemuan. Zaman mengikuti penemuan yang benar-benar selesai, bukan angka pengetahuan saja.
+Jalur inti mekanik/antariksa (ditambah cabang pendukung hayati dan lingkungan): pertanian → metalurgi → mesin → astronomi → listrik → elektronika → roket → penunjang kehidupan → penerbangan antariksa → habitat planet. Syarat rinci dan pekerjaan riset ditampilkan pada panel penemuan. Zaman mengikuti penemuan yang benar-benar selesai, bukan angka pengetahuan saja.
 
 Panel **Kebutuhan → pekerjaan → hasil** menunjukkan sasaran desa, pekerjaan hari terakhir, bahan masuk/keluar, penerima manfaat serta alokasi proyek. Pilih permukiman untuk melihat ekonomi dan penduduknya. Geser peta, gunakan roda mouse, dua jari atau ± untuk zoom. Tampilan tata surya memperlihatkan planet dan perjalanan. Pengamat dapat melihat alien sejak awal; peradaban harus mencapai kontak sendiri.
 
@@ -52,7 +70,7 @@ Panel **Kebutuhan → pekerjaan → hasil** menunjukkan sasaran desa, pekerjaan 
 
 Setiap warga memiliki kekuatan, kecerdasan, daya tahan, karisma, empati dan disiplin (0–100). Atribut memengaruhi pekerjaan terkait dan bertambah lewat latihan; anak mewarisi variasi atribut calon orang tua. Pertumbuhan memakai warga nyata, bukan angka populasi perwakilan. Kelahiran tahunan dapat melibatkan beberapa pasangan jika tempat dan pangan cukup.
 
-Pemerintahan muncul dari kebiasaan berbagi, menimbun, merawat, memaksa, keberagaman pekerjaan dan koordinasi yang bertahan 90 hari. Bentuknya dewan, komunis, sosialis, liberal, kapitalis, hive mind atau otokrasi. Hive mind memerlukan sihir atau elektronika. Legitimasi, kohesi, administrasi, ekonomi, militer, stabilitas dan kekuatan dihitung dari kondisi warga/fasilitas; ideologi sendiri tidak otomatis membuat negara kuat. Sistem distribusi memengaruhi bagian hasil yang disimpan pribadi, stabilitas memengaruhi kerja sama, dan militer memengaruhi pertempuran. Ini model permainan sederhana, bukan prediksi politik dunia nyata.
+Pemerintahan muncul dari kebiasaan berbagi, menimbun, merawat, memaksa, keberagaman pekerjaan dan koordinasi yang bertahan 90 hari. Bentuknya dewan, komunis, sosialis, liberal, kapitalis, hive mind atau otokrasi. Hive mind memerlukan penemuan rekayasa rune atau jejaring pikiran. Legitimasi, kohesi, administrasi, ekonomi, militer, stabilitas dan kekuatan dihitung dari kondisi warga/fasilitas; ideologi sendiri tidak otomatis membuat negara kuat. Sistem distribusi memengaruhi bagian hasil yang disimpan pribadi, stabilitas memengaruhi kerja sama, dan militer memengaruhi pertempuran. Ini model permainan sederhana, bukan prediksi politik dunia nyata.
 
 Permukiman menjadi **Kota pada 30 warga** dan **Kota besar pada 100**. Permukiman yang makmur dapat mendirikan kota baru dengan memindahkan delapan warga nyata beserta kargo. Wilayah dalam satu pemerintahan menjadi **Negara pada 250 warga dan dua permukiman hidup**. Pada 500 warga dan tiga permukiman, otokrasi menjadi Empire, liberal menjadi Federasi, hive mind menjadi Kolektif, dan bentuk lain menjadi Union. Kontak bersahabat yang saling memahami dapat menyatukan pemerintahan. Perpecahan membentuk pemerintahan terpisah.
 
@@ -92,16 +110,16 @@ Untuk Gemini, salin `.env.example` ke `.env` dan isi sendiri. Jangan commit kunc
 | `MAX_PROMPTS_PER_HOUR` | Opsional; default 20, rentang 1–100 |
 | `PORT` | Default 8000; disediakan hosting |
 
-Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.7 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
+Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.8 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
 
 ## Simpanan dan batas model
 
 Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Save versi 1–5 dimigrasikan ke versi 6, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
+Save versi 1–6 dimigrasikan ke versi 7, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
 Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis. Dunia dengan ribuan warga dapat memerlukan beberapa menit untuk menghitung delapan jam offline; perhitungan ini masih berjalan pada thread utama browser.
 
-Batas: tiga planet, delapan peradaban, 256 warga hidup per peradaban termasuk kru, 128 fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Maksimal 2.048 rekaman alat per peradaban. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Peta belum memakai pathfinding, medan tempur spasial atau orbit fisik.
+Batas: tiga planet, delapan peradaban, 256 warga hidup per peradaban termasuk kru, 128 fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Maksimal 2.048 rekaman alat per peradaban. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Jarak perjalanan memakai garis lurus, belum memakai pathfinding atau orbit fisik. Perang deposit menghitung pasukan yang sudah tiba di front, dengan model kendali wilayah sederhana.
 
 Pengujian meliputi keputusan/keahlian, ekonomi dan bukti praktik, sihir, perang, demografi, perpindahan nyata, kru/koloni, migrasi, UI, backend serta kontrak Gemini dengan respons tiruan. Gemini dengan kunci sungguhan dan penampilan visual browser belum diuji di lingkungan ini.
