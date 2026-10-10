@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.8.0**. Dua planet dimulai dengan masing-masing 20 warga nyata: manusia dan alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.9.0**. Dua planet dimulai dengan masing-masing 20 warga nyata: manusia dan alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
@@ -12,7 +12,7 @@ Ada **40 penemuan dalam 10 cabang**, dengan prasyarat lintas cabang. Sihir memak
 
 Setiap fasilitas menampung dua peneliti per hari. Maksimal enam proyek dapat aktif bersamaan. Bahan dibayar sekali saat proyek dimulai; tidak ada progres jika tidak dikerjakan. Kecepatan per peneliti dibagi `1 + 0,15 × (jumlah proyek aktif − 1)`, sehingga paralelisme membagi tenaga dan menambah biaya koordinasi. Proyek dapat berhenti sementara karena peneliti sedang makan, istirahat atau bepergian.
 
-Sebanyak 108 deposit tersebar di tiga planet. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk gudang setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
+Sebanyak 108 deposit tersebar di tiga planet. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
 
 Kereta, kendaraan bermotor dan kendaraan biotik membutuhkan penemuan, fasilitas, bahan dan perakitan. Kendaraan dipakai satu perjalanan pada satu waktu, mempercepat jarak tempuh, meningkatkan muatan dan aus. Kendaraan bermotor membayar lima bahan bakar per keberangkatan. Bekal diambil saat berangkat dan sisanya dikembalikan setelah pulang. Senjata juga dibuat dengan bahan, dipakai satu penjaga per hari dan aus.
 
@@ -20,7 +20,23 @@ Kelangkaan mendorong eksplorasi. Deposit milik pemerintahan lain membutuhkan hub
 
 Tombol **Batas**, **Bahasa**, **Deposit** tersedia langsung pada layar dunia. Batas mengikuti petak yang dimiliki peradaban/polity; label menampilkan jenis serta kekuatan pemerintahan. Lapisan bahasa menampilkan nama dan tahap bahasanya. Deposit yang sudah ditemukan dapat diketuk untuk melihat stok, sifat terbarukan dan pemilik. Posisi warga/perjalanan terlihat di peta.
 
-Simpanan versi 1–6 dimigrasikan ke versi 7 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan awal 20 warga per planet, pilih Dunia baru setelah mengunduh cadangan bila diperlukan.
+Simpanan versi 1–7 dimigrasikan ke versi 8 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan awal 20 warga per planet, pilih Dunia baru setelah mengunduh cadangan bila diperlukan.
+
+## Awal tanpa bangunan, rumah dan gudang (0.9)
+
+Dua permukiman awal masing-masing berisi 20 warga dengan **10 porsi pangan total**: setengah porsi per warga, tanpa kayu, batu, alat, rumah, ladang maupun gudang. Warga mengumpulkan bahan dan membangun sendiri. Tanpa bekal cukup, perjalanan pengumpulan tetap boleh dimulai dengan bekal yang tersedia; perjalanan pasukan tetap membutuhkan logistik penuh. Stok tidak pernah dibuat gratis untuk menolong warga.
+
+Rumah menampung tiga warga, habitat empat; tidak ada tiga tempat tinggal gratis. Setiap warga mendapatkan rumah dan tempat tidur tertentu saat tersedia. Tempat kru tetap dipesan selama mereka pergi. Warga tanpa rumah atau sedang bepergian tidur di luar: istirahat memulihkan 18 energi dibanding 27 di rumah; suasana hati menurun lebih cepat, pemulihan kesehatan lebih rendah dan peluang sakit lebih tinggi. Warga yang kesal lebih mudah berselisih. Kondisi rumah, sakit dan suasana hati terlihat di kartu warga.
+
+**Gudang** membutuhkan 30 kayu, 5 batu dan 30 kerja. Sebelum selesai, seluruh bahan tetap menjadi tumpukan di tanah. Gudang melindungi per jenis: 300 pangan, 500 kayu, 500 batu, 300 bijih, 150 serat, 100 tulang, 250 logam, 250 bahan bakar, 200 paduan serta 150 per resource khusus. Kelebihan tetap di tanah dan tetap bisa digunakan. Pangan di tanah rusak 4% per hari, dalam gudang 0,2%; bahan lain memiliki laju kerusakan/kehilangan yang lebih rendah. Penemuan ekologi tertutup memperlambat pembusukan. Energi dan mana tetap memakai penyimpanan abstrak sistem industrinya. Bekal pribadi juga dapat membusuk; stok deposit tidak terpengaruh aturan penyimpanan.
+
+Satu gudang melindungi 40 peralatan, termasuk prototipe. Alat idle dikembalikan ke gudang tanpa menghapus kepemilikan atau slot warga. Saat dipakai atau bepergian alat dibawa warga. Peralatan di tanah lebih cepat rusak daripada barang dalam gudang; barang yang dibawa juga terpapar. Bahan dan rancangan menentukan ketahanan alat. Beban penggalian mengauskan alat lebih cepat daripada pertanian; senjata batu/logam/balistik dan kendaraan mempunyai daya tahan berbeda. Penggunaan senjata dan jarak perjalanan kendaraan mengurangi kondisi. Peralatan rusak tidak dapat dipakai; slotnya dibersihkan. Kendaraan yang rusak di perjalanan membuat warga melanjutkan dengan berjalan, tanpa menggandakan atau membuang muatan yang sudah diambil.
+
+Kartu warga menampilkan slot penebangan, penggalian, pertanian, senjata dan kendaraan perjalanan: nama, kondisi, daya tahan, pemakaian serta lokasi **Di gudang / Di tanah / Dibawa / Digunakan**. Satu senjata hanya boleh terpasang pada satu warga. Equipment ikut pindah saat warga bermigrasi, memisahkan diri atau mendirikan koloni; ID disesuaikan jika masuk permukiman lain.
+
+Panel **Gudang & peralatan** menyatukan bahan dengan tabel per jenis, menampilkan jumlah di gudang, di tanah dan dibawa; prototipe serta arsip/rusak juga dicatat. Pilihan **Gudang / tanah / Per pemerintah / Sembunyikan stok** berada langsung di layar dunia. Kartu peta dapat diketuk untuk rincian; mode pemerintah menjumlahkan semua permukiman dengan `polityId` yang sama, termasuk planet lain, tanpa menghitung muatan perjalanan, bahan proyek atau milik pribadi. Angka besar di peta disingkat; panel memberi angka penuh. Kartu yang tidak muat tanpa bertumpuk disembunyikan dengan prioritas pada permukiman terpilih. Layar terlalu pendek tetap dapat memakai panel gudang.
+
+Save versi 1–7 dimigrasikan ke versi 8. Rumah, persediaan, alat, proyek dan Q lama dipertahankan; gudang tidak dihadiahkan saat migrasi. Aturan mulai tanpa bangunan hanya berlaku pada **Dunia baru**.
 
 ## Tampilan utama untuk HP
 
@@ -34,7 +50,7 @@ Event penting, bangunan selesai, penemuan, sihir, kontak, perpecahan, perang, pe
 
 | Sistem | Hubungannya dengan sistem lain |
 |---|---|
-| Pangan | Foraging, memancing dan petani menghasilkan pangan; ladang membutuhkan petani, maksimal tiga pekerja per ladang sehari. Pertanian meningkatkan hasil. Pangan untuk makan, kelahiran, penjagaan dan bekal ekspedisi. Surplus di atas kapasitas penyimpanan berangsur rusak. |
+| Pangan | Foraging, memancing dan petani menghasilkan pangan; ladang membutuhkan petani, maksimal tiga pekerja per ladang sehari. Pertanian meningkatkan hasil. Pangan untuk makan, kelahiran, penjagaan dan bekal ekspedisi. Gudang melindungi pangan sesuai kapasitas; stok di tanah lebih cepat rusak. |
 | Rumah dan kesehatan | Rumah menyediakan tiga tempat; habitat menyediakan empat. Tempat kru tetap dihitung agar tidak terisi kelahiran saat mereka pergi. Sumur membantu pemulihan; kesehatan rendah mengurangi efisiensi pekerjaan. |
 | Alat | Warga merancang dan menguji prototipe dengan bahan nyata. Dua alat berhasil membuka bukti metalurgi; pemakaian alat dan peleburan membuka bukti mesin. Alat diberikan kepada pekerja yang membutuhkan, aus dan dapat rusak. Logam serta paduan menjadi pilihan material setelah ditemukan. |
 | Industri | Tungku + metalurgi: kayu → bahan bakar; batu + bahan bakar → logam. Bengkel + mesin: logam + bahan bakar → paduan. Pembangkit + listrik: bahan bakar → energi. Setiap tahap perlu operator. |
@@ -110,13 +126,13 @@ Untuk Gemini, salin `.env.example` ke `.env` dan isi sendiri. Jangan commit kunc
 | `MAX_PROMPTS_PER_HOUR` | Opsional; default 20, rentang 1–100 |
 | `PORT` | Default 8000; disediakan hosting |
 
-Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.8 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
+Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.9 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
 
 ## Simpanan dan batas model
 
 Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Save versi 1–6 dimigrasikan ke versi 7, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
+Save versi 1–7 dimigrasikan ke versi 8, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
 Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis. Dunia dengan ribuan warga dapat memerlukan beberapa menit untuk menghitung delapan jam offline; perhitungan ini masih berjalan pada thread utama browser.
 
