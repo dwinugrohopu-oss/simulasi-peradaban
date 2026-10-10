@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.13.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.14.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
@@ -30,7 +30,7 @@ Ada **40 penemuan dalam 10 cabang**, dengan prasyarat lintas cabang. Sihir memak
 
 Setiap fasilitas menampung dua peneliti per hari. Maksimal enam proyek dapat aktif bersamaan. Bahan dibayar sekali saat proyek dimulai; tidak ada progres jika tidak dikerjakan. Kecepatan per peneliti dibagi `1 + 0,15 × (jumlah proyek aktif − 1)`, sehingga paralelisme membagi tenaga dan menambah biaya koordinasi. Proyek dapat berhenti sementara karena peneliti sedang makan, istirahat atau bepergian.
 
-Dunia baru memiliki 56 deposit: 20 di Bumi Aruna dan 18 per planet lainnya. Deposit biasa berisi 100–300 unit, sedangkan deposit di wilayah berbahaya berisi 1.000–3.000 unit. Sumber pangan dan kayu dasar berada dekat desa, sedangkan sebagian batu serta bijih perlu dicari lebih jauh. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
+Dunia baru memiliki 60 deposit: 24 di Bumi Aruna dan 18 per planet lainnya. Cadangan awal untuk lima warga berisi 140–200 pangan, 240–320 kayu dan 120–180 batu; cadangan Aster empat kali lebih besar untuk 20 warga. Deposit jauh berisi 600–2.200 unit sesuai jenisnya, sedangkan hutan berbahaya berisi 4.000–7.000 kayu dan bijih berbahaya 2.000–5.000 unit. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
 
 Kereta, kendaraan bermotor dan kendaraan biotik membutuhkan penemuan, fasilitas, bahan dan perakitan. Kendaraan dipakai satu perjalanan pada satu waktu, mempercepat jarak tempuh, meningkatkan muatan dan aus. Kendaraan bermotor membayar lima bahan bakar per keberangkatan. Bekal diambil saat berangkat dan sisanya dikembalikan setelah pulang. Senjata juga dibuat dengan bahan, dipakai satu penjaga per hari dan aus.
 
@@ -62,7 +62,7 @@ Kartu warga menampilkan slot penebangan, penggalian, pertanian, senjata dan kend
 
 Panel **Gudang & peralatan** menyatukan bahan dengan tabel per jenis, menampilkan jumlah di gudang, di tanah dan dibawa; prototipe serta arsip/rusak juga dicatat. Pilihan **Gudang / tanah / Per pemerintah / Sembunyikan stok** berada langsung di layar dunia. Kartu peta dapat diketuk untuk rincian; mode pemerintah menjumlahkan semua permukiman dengan `polityId` yang sama, termasuk planet lain, tanpa menghitung muatan perjalanan, bahan proyek atau milik pribadi. Angka besar di peta disingkat; panel memberi angka penuh. Kartu yang tidak muat tanpa bertumpuk disembunyikan dengan prioritas pada permukiman terpilih. Layar terlalu pendek tetap dapat memakai panel gudang.
 
-Save versi 1–9 dimigrasikan ke versi 10. Rumah, persediaan, alat, proyek dan Q lama dipertahankan; gudang tidak dihadiahkan saat migrasi. Aturan mulai tanpa bangunan hanya berlaku pada **Dunia baru**.
+Save versi 1–10 dimigrasikan ke versi 11. Rumah, persediaan, alat, proyek dan Q lama dipertahankan; gudang tidak dihadiahkan saat migrasi. Aturan mulai tanpa bangunan hanya berlaku pada **Dunia baru**.
 
 ## Tampilan utama untuk HP
 
@@ -162,7 +162,7 @@ Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Buil
 
 Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Save versi 1–9 dimigrasikan ke versi 10, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
+Save versi 1–10 dimigrasikan ke versi 11, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
 Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis. Dunia dengan ribuan warga dapat memerlukan beberapa menit untuk menghitung delapan jam offline; perhitungan ini masih berjalan pada thread utama browser.
 
@@ -177,3 +177,12 @@ Kategori Penduduk, Gudang & peralatan, Pembangunan, Penelitian & zaman, Pekerjaa
 Daerah otomatis mengikuti empat kuadran geografis planet: Barat Laut, Timur Laut, Barat Daya dan Tenggara, dengan batas x=1.600 dan y=1.000. Daerah hanya mengelompokkan permukiman dalam pemerintahan dan planet yang sama. Desa/koloni baru mengikuti lokasi dan pemerintahannya; persatuan pemerintahan memperbarui hierarki. Pengelompokan tampilan ini tidak memindahkan warga, barang atau mengubah isi simpanan.
 
 Penduduk, stok gudang/tanah, jenis peralatan, bangunan dan penelitian ditampilkan dalam tabel tiap permukiman. Detail warga selalu menunjuk permukiman asalnya, termasuk ketika nomor warga sama di desa berbeda. Prioritas dapat diubah langsung pada permukiman terkait. Pemberitahuan bangunan selesai dihapus dari popup; penyelesaian tetap tercatat dalam jurnal.
+
+
+## Resource, senjata dan notifikasi (0.14)
+
+Dunia baru mempunyai cadangan pangan, kayu dan batu terbatas dekat setiap pemukiman, serta rusa untuk latihan berburu. Cadangan awal Aster mengikuti jumlah penduduknya. Deposit jauh lebih besar; wilayah berbahaya mempunyai hutan lebat dan bijih dalam jumlah besar yang dijaga predator. Geografi, stok dan satwa simpanan lama tetap dipertahankan.
+
+Senjata berkembang dari batu, tombak dan busur ke logam/pedang, senapan mesiu, pistol, senapan balistik, granat, meriam dan laser. Produksi memakai bahan, gudang/arsenal dan penemuan terkait. Senjata jarak jauh dibuat tanpa amunisi; warga mengisi panah, peluru, muatan ledakan atau energi di pemukiman dengan menghabiskan bahan yang tersedia. Setiap serangan memakai satu muatan dan mengurangi ketahanan. Latihan per jenis senjata bertambah hanya ketika senjata benar-benar digunakan, meningkatkan serangan; jangkauan memberi kesempatan menyerang sebelum hewan mendekat, sedangkan senjata berat memperlambat warga. Slot detail warga menampilkan senjata, ketahanan, amunisi/energi, jangkauan dan latihan. Senjata balistik dari simpanan lama dimigrasikan kosong untuk diisi kembali.
+
+Tombol “Seluruh planet” menampilkan planet aktif tanpa mengubah pemukiman yang sedang diperiksa. Informasi deposit dapat ditutup dengan ×, Escape atau ketukan pada peta kosong. Notifikasi tampil sebagai daftar di kanan atas dengan tombol tutup setiap item dan “Tutup semua”; daftar dibatasi 12 item dan item hilang setelah 10 detik. Catatan jurnal tetap tersedia.

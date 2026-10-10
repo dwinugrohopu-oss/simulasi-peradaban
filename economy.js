@@ -61,12 +61,12 @@ export function goal(s){
  return {kind:'general',actions:['social','teach','craft'],reason:'Merawat hubungan dan keahlian'};
 }
 export function workAvailable(s,a){
- const c=civic(s),list=[...cultureActions(s,a),...equipmentActions(s)];if(known(s,'metallurgy')&&s.buildings.furnace){if(s.wood>=2)list.push('fuel');if(affordable(s,{ore:2,fuel:1}))list.push('smelt');}if(known(s,'mechanics')&&s.buildings.workshop&&affordable(s,{metal:2,fuel:1}))list.push('alloy');if(known(s,'electricity')&&s.buildings.generator&&affordable(s,{fuel:1}))list.push('generate');
+ const c=civic(s),list=[...cultureActions(s,a),...equipmentActions(s,a)];if(known(s,'metallurgy')&&s.buildings.furnace){if(s.wood>=2)list.push('fuel');if(affordable(s,{ore:2,fuel:1}))list.push('smelt');}if(known(s,'mechanics')&&s.buildings.workshop&&affordable(s,{metal:2,fuel:1}))list.push('alloy');if(known(s,'electricity')&&s.buildings.generator&&affordable(s,{fuel:1}))list.push('generate');
  if(customTarget(s))list.push('extract');if(customTarget(s,true))list.push('useResource');
  const gifted=a.arcaneSensitivity>=75;if(s.buildings.arcaneSanctum&&c&&((!c.magic&&gifted&&a.skills.research>=20&&s.tech>=40&&nearbySource(s))||(c.magic&&a.skills.studyMagic<20&&a.skills.research>=10&&(nearbySource(s)||adults(s).some(b=>b.skills.studyMagic>=20)))))list.push('studyMagic');if(c?.magic&&(gifted||a.skills.studyMagic>=20)){if(nearbySource(s)&&balance(s,'mana')<100)list.push('channel');if(balance(s,'mana')>=2){if(living(s).some(b=>b.health<85))list.push('heal');if(s.project)list.push('enchantBuild');}}
  if(known(s,'electronics')&&known(s,'astronomy')&&s.buildings.observatory&&balance(s,'energy')>=.5&&c.signalProgress<100)list.push('observe');if(c?.ship&&c.ship.progress<c.ship.required&&known(s,'spaceflight')&&s.buildings.shipyard)list.push('assembleShip');if(c?.war&&s.food>=.5&&a.health>=35)list.push('defend');if(s.buildings.school&&a.skills.research>=20&&living(s).some(b=>b.id!==a.id&&b.skills.research<a.skills.research*.7))list.push('teach');if(known(s,'herbalMedicine')&&s.buildings.bioLab&&s.food>=1&&living(s).some(p=>p.health<90))list.push('treat');if(known(s,'forestry')&&s.buildings.ecologyStation&&(s.world||s._context)&&s.wood>=3)list.push('restore');if(known(s,'mindfulness')&&s.buildings.mindHall)list.push('meditate');if(known(s,'administration')&&s.buildings.civicHall&&s.food>=.2)list.push('govern');return list;
 }
-export function needBonus(s,a,key,g=goal(s)){if(a.journey?.encounter){const beast=rootOf(s).world.beasts.find(b=>b.id===a.journey.encounter),stats=combatStats(s,a),danger=!a.equipment.weapon||!SPECIES[beast.species].passive&&!a.equipment.armor||stats.attack<beast.defense||a.health<45||beast.attack-stats.defense*.6>a.health*.4;if(key==='flee')return danger?10:0;return ['hunt','defend'].includes(key)?3:0;}let n=g.actions.includes(key)?(g.kind==='war'?10:5):0;
+export function needBonus(s,a,key,g=goal(s)){if(a.journey?.encounter){const beast=rootOf(s).world.beasts.find(b=>b.id===a.journey.encounter),stats=combatStats(s,a),danger=!a.equipment.weapon||!SPECIES[beast.species].passive&&!a.equipment.armor||stats.attack<beast.defense||a.health<45||beast.attack-stats.defense*.6>a.health*.4;if(key==='flee')return danger?10:0;return ['hunt','defend'].includes(key)?3:0;}if(key==='reloadWeapon')return 8;let n=g.actions.includes(key)?(g.kind==='war'?10:5):0;
  if((a.energy<35||a.health<40)&&key==='rest')n+=5;if(!a.home&&['build','enchantBuild'].includes(key)&&s.project?.key==='hut')n+=2;if(a.hunger>55&&key==='eat')n+=5;if(a.journey){if(key==='travel')n+=3;if(key==='returnHome'&&(a.health<45||a.hunger>75||routeThreat(s,a,a.journey.target,a.journey.position)))n+=7;}
  if(key==='forgeArmor'&&!a.equipment.armor)n+=4;
  if(key==='craft'&&(s.tools.some(t=>t.status==='prototype'&&(t.maker??t.owner)===a.id)||adults(s).some(b=>['wood','stone','farm'].some(job=>b.skills[job]>10&&!b.equipment[job]))))n+=3;
@@ -80,7 +80,7 @@ export function needBonus(s,a,key,g=goal(s)){if(a.journey?.encounter){const beas
 }
 export function runResearch(s,a,scale,{log}){return researchWork(s,a,scale,log);}
 export function runWork(s,a,key,scale,{log}){
- if(['forgeArmor','forgeWeapon','makeVehicle'].includes(key))return equipmentWork(s,a,key,scale,log);
+ if(['forgeArmor','forgeWeapon','reloadWeapon','makeVehicle'].includes(key))return equipmentWork(s,a,key,scale,log);
  if(key==='restore')return restoreNature(s,a,scale);
  if(['diplomacy','translate'].includes(key))return cultureWork(s,a,key);
  const c=civic(s);if(known(s,'automation')&&['smelt','alloy','generate','fuel'].includes(key))scale*=1.25;if(known(s,'runeCraft')&&['heal','enchantBuild','channel'].includes(key))scale*=1.15;let reward=0,energy=5,note='',target=null;

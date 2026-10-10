@@ -8,7 +8,7 @@ import {startGather,startHunt,journeyWork} from '../frontier.js';
 import {equipWeapon,equipArmor,ARMORS,equipmentWork} from '../equipment.js';
 import {storageDay,equipmentStorage} from '../storage.js';
 import {governmentScores,updateCulture} from '../civics.js';
-function trained(s,a){for(const k of Object.keys(a.attributes))a.attributes[k]=90;a.health=100;a.energy=100;a.skills.defend=a.skills.hunt=a.skills.flee=100;s.weapons.push({id:s.nextWeaponId++,type:'ballistic',condition:100,uses:0,owner:null});s.armors.push({id:s.nextArmorId++,type:'alloy',condition:100,uses:0,owner:null});equipWeapon(s,a);equipArmor(s,a);}
+function trained(s,a){for(const k of Object.keys(a.attributes))a.attributes[k]=90;a.health=100;a.energy=100;a.skills.defend=a.skills.hunt=a.skills.flee=100;s.weapons.push({id:s.nextWeaponId++,type:'ballistic',condition:100,uses:0,owner:null,ammo:20});s.armors.push({id:s.nextArmorId++,type:'alloy',condition:100,uses:0,owner:null});equipWeapon(s,a);equipArmor(s,a);}
 function contact(s){const c=s.world.settlements[0],z=s.world.wildlands[0];z.seenBy.push(c.id);return z;}
 function face(s,a,species='bear'){const c=s.world.settlements[0],z=s.world.wildlands[0];const n=s.world.nodes.find(n=>n.wildland===z.id&&n.kind==='wood');startGather(s,a,'wood',12,()=>{});a.journey.target={x:z.x,y:z.y};a.journey.position={x:z.x,y:z.y};a.journey.node=n.id;const beast=s.world.beasts.find(b=>b.area===z.id&&b.species===species)||s.world.beasts.find(b=>b.area===z.id);beast.species=species;Object.assign(beast,SPECIES[species]);delete beast.name;a.journey.encounter=beast.id;return beast;}
 test('new worlds space human villages15–22 days apart with independent languages and rich territorial resources',()=>{

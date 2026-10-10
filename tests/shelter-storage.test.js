@@ -50,7 +50,7 @@ test('real beds reserve places for expedition crew; homelessness worsens rest, s
 test('version seven saves migrate without inventing a warehouse or changing supplies, tools and Q',()=>{
  const old=legacyWorld(6,0);old.version=7;old.world.settlements[1].state.version=7;old.buildings.hut=2;
  for(const st of [old,old.world.settlements[1].state]){delete st.buildings.warehouse;for(const a of st.agents){delete a.home;delete a.illnessDays;}}
- const restored=validateSave(old);assert.equal(restored.version,10);assert.equal(restored.buildings.warehouse,0);assert.equal(restored.food,old.food);assert.equal(restored.buildings.hut,2);assert.equal(restored.agents.filter(a=>a.home).length,6);assert.deepEqual(restored.agents[0].q,old.agents[0].q);assert.deepEqual(validateSave(restored),restored);
+ const restored=validateSave(old);assert.equal(restored.version,11);assert.equal(restored.buildings.warehouse,0);assert.equal(restored.food,old.food);assert.equal(restored.buildings.hut,2);assert.equal(restored.agents.filter(a=>a.home).length,6);assert.deepEqual(restored.agents[0].q,old.agents[0].q);assert.deepEqual(validateSave(restored),restored);
  const bad=structuredClone(restored);bad.agents[1].home=bad.agents[0].home;assert.throws(()=>validateSave(bad));bad.agents[1].home=null;bad.agents[0].illnessDays=-1;assert.throws(()=>validateSave(bad));
 });
 

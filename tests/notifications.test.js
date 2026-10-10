@@ -19,3 +19,5 @@ test('an event with a free-form name still appears even without a keyword in its
 });
 
 test('new completed buildings remain in the journal without producing popup notices',()=>{const s=newGame(4,0),n=createNotices();n.reset(s);log(s,'Rumah selesai dibangun.');n.collect(s);assert.equal(n.show(0),null);assert.ok(s.logs.some(l=>l.text==='Rumah selesai dibangun.'));});
+
+test('list shows simultaneous notices, individual dismissal preserves others, clear all never replays',()=>{const s=newGame(6,0),n=createNotices();n.reset(s);for(let i=0;i<3;i++)log(s,'Penelitian Teknologi '+i+' selesai. Zaman: Industri.');n.collect(s);const items=n.list(10);assert.equal(items.length,3);n.dismiss(items[1].id);assert.deepEqual(n.list(11).map(n=>n.id),[items[0].id,items[2].id]);n.dismissAll();n.collect(s);assert.deepEqual(n.list(12),[]);log(s,'Penelitian Baru selesai. Zaman: Industri.');n.collect(s);assert.equal(n.list(13).length,1);assert.deepEqual(n.list(10013),[]);});

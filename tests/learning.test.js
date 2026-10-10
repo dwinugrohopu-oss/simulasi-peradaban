@@ -27,7 +27,7 @@ test('journey credit survives saving and death settles it once',()=>{
 });
 test('version8 Q values and mid-journey cargo migrate without inventing delayed credit',()=>{
  const s=newGame(11,0),a=s.agents[0];step(s,a,'wood');s.version=8;for(const c of s.world.settlements){const st=stateOf(s,c);st.version=8;for(const b of st.agents){delete b.tripCredit;delete b.skills.returnHome;for(const r of Object.values(b.q))delete r.returnHome;}}
- const key=Object.keys(a.q)[0],old=a.q[key].wood,restored=validateSave(s);assert.equal(restored.version,10);assert.equal(restored.agents[0].q[key].wood,old);assert.equal(restored.agents[0].q[key].returnHome,0);assert.deepEqual(restored.agents[0].journey,a.journey);assert.equal(restored.agents[0].tripCredit,null);
+ const key=Object.keys(a.q)[0],old=a.q[key].wood,restored=validateSave(s);assert.equal(restored.version,11);assert.equal(restored.agents[0].q[key].wood,old);assert.equal(restored.agents[0].q[key].returnHome,0);assert.deepEqual(restored.agents[0].journey,a.journey);assert.equal(restored.agents[0].tripCredit,null);
 });
 test('food scarcity plans an affordable farm before storage; blocked priorities permit another project',()=>{
  const s=newGame(12,0);s.food=0;s.wood=25;s.stone=5;autoPlan(s);assert.equal(s.project.key,'farm');const t=newGame(13,0);t.buildings.warehouse=1;t.buildings.farm=1;t.food=100;t.wood=35;t.stone=10;autoPlan(t);assert.equal(t.project.key,'hut');

@@ -11,7 +11,7 @@ import {ATTRIBUTES,GOVERNMENTS,LANGUAGE_STAGES,territory,understanding,sampleSen
 import {createNotices} from './notifications.js';
 import {buildingCost,known} from './economy.js';
 import {stateOf,stageName,DISCOVERIES,discoveryStatus} from './world.js';
-import {camera,drawWorld,pan,zoom,focus,hit,hitResource,hitStock} from './map.js';
+import {camera,drawWorld,pan,zoom,focus,showPlanet,hit,hitResource,hitStock} from './map.js';
 import {localDraft,describeEffect,OBJECT_LABELS,validateDescriptor} from './world-schema.js';
 import {DAY_MS,OFFLINE_CAP,newGame,population,capacity,era,tick,advance,observation,available,epsilon,row,startProject,BUILDINGS,LABELS,POLICIES,validateSave,log,TRAITS,efficiency,expertise,traitBonus,buildingNeeds,applyObject,goal,needBonus} from './engine.js';
 let renderCiv=null,renderTargets=null;
@@ -22,7 +22,7 @@ let menuOrigin=null,noticeUntil=0,detailCitizen=null;
 function currentRoot(){return state;}
 function focused(){if(renderCiv)return renderCiv;return state.world.settlements.find(c=>c.id===focusId)||state.world.settlements[0];}
 function viewState(){return stateOf(state,focused());}
-function selectCivilization(id,center=true){focusId=Number(id);selected=null;detailCitizen=null;revealMenuSettlement=focusId;if(center)focus(view,focused());render();}
+function selectCivilization(id,center=true){hideMapDetail();focusId=Number(id);selected=null;detailCitizen=null;revealMenuSettlement=focusId;if(center)focus(view,focused());render();}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function notice(text){$('notice').textContent=text;$('notice').hidden=false;noticeUntil=Date.now()+8000;}
 function error(text){$('error').textContent=text;$('error').hidden=!text;}
@@ -65,7 +65,8 @@ function showEquipmentSlots(s,a,locations){
  const grid=el('div',undefined,'equipment-slots');
  for(const [slot,label]of [['wood','Penebangan'],['stone','Penggalian'],['farm','Pertanian'],['weapon','Senjata'],['armor','Pelindung'],['vehicle','Kendaraan']]){
   const category=slot==='weapon'?'weapons':slot==='armor'?'armors':slot==='vehicle'?'vehicles':'tools',id=slot==='vehicle'?a.journey?.vehicle:a.equipment[slot],item=s[category].find(item=>item.id===id),cell=el('div',undefined,'equipment-slot');cell.append(el('small',label));
-  if(!item){cell.append(el('span','Kosong'));}else{const name=category==='tools'?item.name:category==='weapons'?{stone:'Senjata batu',metal:'Senjata logam',ballistic:'Senjata balistik'}[item.type]:category==='armors'?ARMORS[item.type].name:VEHICLE_NAMES[item.type],max=category==='tools'?item.physics.durability:100;
+  if(!item){cell.append(el('span','Kosong'));}else{const name=category==='tools'?item.name:category==='weapons'?WEAPONS[item.type].name:category==='armors'?ARMORS[item.type].name:VEHICLE_NAMES[item.type],max=category==='tools'?item.physics.durability:100;
+   if(category==='weapons'){const spec=WEAPONS[item.type];if(spec.ammoCapacity)cell.append(el('small',spec.ammoName+': '+item.ammo+'/'+spec.ammoCapacity));cell.append(el('small','Jangkauan '+spec.range+' · '+(a.weaponPractice?.[item.type]||0)+'× latihan'));}
    const using=category==='tools'?a.action===slot:slot==='weapon'?['defend','hunt'].includes(a.action):!!a.journey;
    const place=locations.stored[category].has(id)?'Di gudang':locations.carried[category].has(id)?using?'Digunakan':'Dibawa':'Di tanah';
    cell.append(el('strong',name),el('small',Math.round(item.condition/max*100)+'% · '+place),el('small','Daya tahan '+Math.round(category==='tools'?max:(category==='weapons'?WEAPONS:category==='armors'?ARMORS:VEHICLES)[item.type].durability)+' · '+item.uses+'× pakai'));cell.setAttribute('title',name+' · Ketahanan '+item.condition.toFixed(1)+'/'+max+(category==='tools'?'':' · Daya tahan '+(category==='weapons'?WEAPONS:category==='armors'?ARMORS:VEHICLES)[item.type].durability));
@@ -86,7 +87,7 @@ function showObjects(){
  const state=viewState();
  $('world-objects').replaceChildren(...state.objects.map(o=>{const d=el('div',undefined,'world-object');d.append(el('strong',o.descriptor.name),el('small',OBJECT_LABELS[o.kind]+' · '+(o.kind==='event'?o.remaining+' hari tersisa':o.kind==='building'?'Bangunan aktif':'Cadangan '+Math.floor(o.stock))),el('small',describeEffect(o.descriptor)));return d;}));
 }
-function drawMap(time){const canvas=$('world'),rect=canvas.getBoundingClientRect();const width=Math.max(1,Math.round(rect.width)),height=Math.max(1,Math.round(rect.height));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}drawWorld(state,view,$('world'),focusId,time);}
+function drawMap(time){const canvas=$('world'),rect=canvas.getBoundingClientRect();const width=Math.max(1,Math.round(rect.width)),height=Math.max(1,Math.round(rect.height));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}view.width=width;view.height=height;if(view.overview)showPlanet(view);drawWorld(state,view,$('world'),focusId,time);}
 function drawChart(){const state=viewState();const c=$('chart'),ctx=c.getContext('2d'),data=state.history;ctx.clearRect(0,0,c.width,c.height);const max=Math.max(30,...data.map(h=>h.food));ctx.strokeStyle='#2e4035';for(let i=0;i<4;i++){const y=20+i*45;ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(590,y);ctx.stroke();}ctx.font='12px system-ui';ctx.fillStyle='#9aae9b';if(data.length<2){ctx.fillText('Grafik tersedia setelah 20 hari.',15,100);return;}ctx.beginPath();data.forEach((h,i)=>{const x=12+i/(data.length-1)*575,y=170-h.food/max*145;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.strokeStyle='#afd29b';ctx.lineWidth=3;ctx.stroke();$('chart-caption').textContent=`Hari ${fmt(data[0].day)}–${fmt(data.at(-1).day)} · rentang 0–${fmt(max)} makanan`;}
 
 let groupedWorld=null,revealMenuSettlement=1;
@@ -242,8 +243,8 @@ function showTools(){
  $('tools').replaceChildren(el('h3','Peralatan gudang'),el('small','Slot warga tetap dicatat saat alat dikembalikan ke gudang. Peralatan di tanah cepat rusak; pemakaian dan perjalanan juga mengurangi ketahanan.'));
  for(const {category,title,rows}of groups){
   if(!rows.length){$('tools').append(el('p',title+': belum ada.'));continue;}
-  const headers=['Jenis','Gudang','Tanah','Dibawa','Kondisi'];
-  $('tools').append(inventoryTable(title,headers,rows.map(r=>[r.name,r.stored,r.ground,r.carried||0,r.condition===null?'—':Math.round(r.condition)+'%'])));
+  const headers=['Jenis','Gudang','Tanah','Dibawa','Kondisi',...(category==='weapons'?['Amunisi / energi']:[])];
+  $('tools').append(inventoryTable(title,headers,rows.map(r=>[r.name,r.stored,r.ground,r.carried||0,r.condition===null?'—':Math.round(r.condition)+'%',...(category==='weapons'?[r.ammoCapacity?r.ammo+' / '+r.ammoCapacity:'—']:[])])));
   const pending=rows.reduce((n,r)=>n+r.pending,0),archive=rows.reduce((n,r)=>n+r.archive,0);if(pending||archive)$('tools').append(el('small',title+': '+pending+' menunggu uji · '+archive+' arsip/rusak'));
 
  }
@@ -272,6 +273,7 @@ function showDiscoveries(){const civ=focused(),s=viewState();$('discoveries').re
  $('custom-resources').replaceChildren(...s.customResources.map(r=>{const item=el('div',undefined,'world-object');item.append(el('strong',r.name),el('small',`${fmt(r.stock)} di alam · ${r.amount.toFixed(1)} terkumpul · ${r.category}`),el('small',`Energi ${r.energy} · Sihir ${r.arcane} · Riset ${r.research} · Toksisitas ${r.toxicity}`));return item;}));
  for(const e of state.world.events.filter(e=>e.civ===civ.id))$('custom-resources').append(el('p',`${e.descriptor.name}: ${e.active?e.remaining+' hari tersisa':'menunggu '+e.descriptor.trigger}`));
 }
+function hideMapDetail(){$('map-detail').hidden=true;}
 function initMap(){
  const canvas=$('world'),pointers=new Map();let drag=null,pinch=null;
  const pos=e=>{const rect=canvas.getBoundingClientRect();return {x:(e.clientX-rect.left)*canvas.width/rect.width,y:(e.clientY-rect.top)*canvas.height/rect.height};};
@@ -281,12 +283,12 @@ function initMap(){
  canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pos(e);zoom(view,Math.exp(-e.deltaY*.001),p.x,p.y);refresh();},{passive:false});
  canvas.addEventListener('pointerdown',e=>{const p=pos(e);pointers.set(e.pointerId,p);canvas.setPointerCapture(e.pointerId);if(pointers.size===1)drag={...p,startX:p.x,startY:p.y,moved:false};else if(pointers.size===2){const [a,b]=[...pointers.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);if(drag)drag.moved=true;}});
  canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const p=pos(e),old=pointers.get(e.pointerId);pointers.set(e.pointerId,p);if(pointers.size===2){const [a,b]=[...pointers.values()],distance=Math.hypot(a.x-b.x,a.y-b.y);if(pinch>0)zoom(view,distance/pinch,(a.x+b.x)/2,(a.y+b.y)/2);pinch=distance;}else if(drag){if(Math.hypot(p.x-drag.startX,p.y-drag.startY)>6)drag.moved=true;if(drag.moved)pan(view,p.x-old.x,p.y-old.y);}refresh();});
- const end=(e,cancel=false)=>{const p=pointers.get(e.pointerId);if(!cancel&&p&&pointers.size===1&&drag&&!drag.moved){const stock=hitStock(view,p.x,p.y);if(stock){selectCivilization(stock.civId,false);openMenu('resources');pointers.delete(e.pointerId);pinch=null;drag=null;return;}const node=hitResource(state,view,p.x,p.y,focusId);if(node){const owner=state.world.settlements.find(c=>c.id===node.owner),area=state.world.wildlands.find(z=>z.id===node.wildland),beasts=area?state.world.beasts.filter(b=>b.area===area.id&&b.health>0):[];$('map-detail').hidden=false;$('map-detail').textContent=NODE_NAMES[node.kind]+' · '+fmt(node.stock)+' / '+fmt(node.capacity)+' · '+(node.renewal?'Pulih perlahan':'Tidak terbarukan')+' · '+(owner?owner.name:'Wilayah bebas')+(area?' · BAHAYA: '+area.name+' · '+beasts.length+' hewan buas · '+[...new Set(beasts.map(b=>b.species))].map(k=>{const b=SPECIES[k];return b.name+' (tingkat '+b.tier+', serangan '+b.attack+', pertahanan '+b.defense+', kecepatan '+b.speed+')';}).join('; '):'');}const object=node?null:hit(state,view,p.x,p.y);if(object){if(view.layer==='space'){view.layer='planet';view.planet=object.id;view.x=1600;view.y=1000;view.zoom=.24;render();}else selectCivilization(object.id);}}pointers.delete(e.pointerId);pinch=null;drag=null;};
+ const end=(e,cancel=false)=>{const p=pointers.get(e.pointerId);if(!cancel&&p&&pointers.size===1&&drag&&!drag.moved){const stock=hitStock(view,p.x,p.y);if(stock){selectCivilization(stock.civId,false);openMenu('resources');pointers.delete(e.pointerId);pinch=null;drag=null;return;}const node=hitResource(state,view,p.x,p.y,focusId);if(node){const owner=state.world.settlements.find(c=>c.id===node.owner),area=state.world.wildlands.find(z=>z.id===node.wildland),beasts=area?state.world.beasts.filter(b=>b.area===area.id&&b.health>0):[];$('map-detail').hidden=false;$('map-detail-text').textContent=NODE_NAMES[node.kind]+(node.tier?' · '+({starter:'Cadangan awal',remote:'Deposit jauh',wild:'Wilayah berbahaya'}[node.tier]):'')+' · '+fmt(node.stock)+' / '+fmt(node.capacity)+' · '+(node.renewal?'Pulih perlahan':'Tidak terbarukan')+' · '+(owner?owner.name:'Wilayah bebas')+(area?' · BAHAYA: '+area.name+' · '+beasts.length+' hewan buas · '+[...new Set(beasts.map(b=>b.species))].map(k=>{const b=SPECIES[k];return b.name+' (tingkat '+b.tier+', serangan '+b.attack+', pertahanan '+b.defense+', kecepatan '+b.speed+')';}).join('; '):'');}if(!node)hideMapDetail();const object=node?null:hit(state,view,p.x,p.y);if(object){if(view.layer==='space'){showPlanet(view,object.id);render();}else selectCivilization(object.id);}}pointers.delete(e.pointerId);pinch=null;drag=null;};
  canvas.addEventListener('pointerup',e=>end(e));canvas.addEventListener('pointercancel',e=>end(e,true));
  $('civilization').onchange=()=>selectCivilization($('civilization').value);
- $('planet').onchange=()=>{view.planet=Number($('planet').value);view.layer='planet';view.x=1600;view.y=1000;view.zoom=.24;render();};
- $('map-layer').onchange=()=>{view.layer=$('map-layer').value;view.x=1600;view.y=1000;view.zoom=.24;render();};
- $('zoom-in').onclick=()=>{zoom(view,1.3);refresh();};$('zoom-out').onclick=()=>{zoom(view,1/1.3);refresh();};$('map-home').onclick=()=>{focus(view,focused());render();};
+ $('planet').onchange=()=>{hideMapDetail();showPlanet(view,Number($('planet').value));drawMap(Date.now());render();};
+ $('map-layer').onchange=()=>{hideMapDetail();view.overview=false;view.layer=$('map-layer').value;view.x=1600;view.y=1000;view.zoom=.24;if(view.layer==='planet')showPlanet(view);drawMap(Date.now());render();};
+ $('zoom-in').onclick=()=>{zoom(view,1.3);refresh();};$('zoom-out').onclick=()=>{zoom(view,1/1.3);refresh();};$('map-home').onclick=()=>{hideMapDetail();focus(view,focused());drawMap(Date.now());render();};$('map-planet').onclick=()=>{hideMapDetail();showPlanet(view);drawMap(Date.now());render();};$('map-detail-close').onclick=hideMapDetail;
 }
 
 function resourceName(key){return {food:'pangan',wood:'kayu',stone:'batu',fiber:'serat',bone:'tulang',metal:'logam',fuel:'bahan bakar',alloy:'paduan',energy:'energi',mana:'mana'}[key]||key;}
@@ -306,11 +308,14 @@ function closeMenu(){
  menuOrigin?.focus?.();menuOrigin=null;
 }
 function showNotification(){
- const item=worldNotices.show(Date.now());$('world-notifications').hidden=!item;if(!item)return;
- const node=$('world-notifications');if(node.dataset.noticeId===String(item.id))return;node.dataset.noticeId=String(item.id);node.dataset.kind=item.kind;
- $('notification-kind').textContent=item.kind==='achievement'?'Pencapaian':item.kind==='alert'?'Perhatian':'Peristiwa';
- $('notification-title').textContent=item.title;$('notification-text').textContent=item.text;
- $('notification-meta').textContent=item.name+' · Hari '+item.day+' · Ketuk untuk catatan';
+ const items=worldNotices.list(Date.now()),node=$('world-notifications');node.hidden=!items.length;
+ const stamp=items.map(n=>n.id).join(':');if(node.dataset.noticeIds===stamp)return;node.dataset.noticeIds=stamp;
+ $('notification-list').replaceChildren();for(const item of items){
+ const row=el('div',undefined,'notification-item');row.dataset.kind=item.kind;
+ const open=el('button',undefined,'notification-open');open.append(el('span',item.kind==='achievement'?'Pencapaian':item.kind==='alert'?'Perhatian':'Peristiwa'),el('strong',item.title),el('span',item.text),el('small',item.name+' · Hari '+item.day+' · Ketuk untuk catatan'));
+ open.onclick=()=>{selectCivilization(item.civId);openMenu('journal',$('journal-toggle'));worldNotices.dismiss(item.id);showNotification();};
+ const close=el('button','×','notification-dismiss');close.setAttribute('aria-label','Tutup '+item.title);close.onclick=()=>{worldNotices.dismiss(item.id);showNotification();};row.append(open,close);$('notification-list').append(row);
+ }
 }
 function initMenus(){
  closeMenu();
@@ -319,9 +324,8 @@ function initMenus(){
  $('intervention-toggle').onclick=()=>openMenu('prompt',$('intervention-toggle'));
  $('journal-toggle').onclick=()=>openMenu('journal',$('journal-toggle'));
  $('menu-close').onclick=closeMenu;$('menu-backdrop').onclick=closeMenu;
- $('notification-dismiss').onclick=()=>{worldNotices.dismiss();showNotification();};
- $('notification-open').onclick=()=>{const item=worldNotices.show(Date.now());if(item)selectCivilization(item.civId);openMenu('journal',$('journal-toggle'));worldNotices.dismiss();$('world-notifications').hidden=true;};
- document.addEventListener('keydown',event=>{if($('menu-drawer').hidden)return;if(event.key==='Escape'){event.preventDefault();closeMenu();}else if(event.key==='Tab'){const nodes=[...$('menu-drawer').querySelectorAll('button,select,input,textarea,summary,a[href]')].filter(n=>!n.disabled&&n.getClientRects().length);if(!nodes.length)return;const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
+ $('notification-clear').onclick=()=>{worldNotices.dismissAll();showNotification();};
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('map-detail').hidden){hideMapDetail();event.preventDefault();if($('menu-drawer').hidden)return;}if($('menu-drawer').hidden)return;if(event.key==='Escape'){event.preventDefault();closeMenu();}else if(event.key==='Tab'){const nodes=[...$('menu-drawer').querySelectorAll('button,select,input,textarea,summary,a[href]')].filter(n=>!n.disabled&&n.getClientRects().length);if(!nodes.length)return;const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
 }
 
 function showCulture(){const c=focused(),s=viewState(),g=c.government,l=c.language,t=territory(state,c),leader=s.agents.find(a=>a.id===g.leader);$('government').replaceChildren(el('h2',GOVERNMENTS[g.type]),el('p',t.form+' · '+t.pop+' warga nyata · '+t.members.length+' permukiman · Pemerintahan '+(g.power>=70?'kuat':g.power<40?'lemah':'sedang')),el('small',leader?'Pemimpin: '+leader.name:'Belum ada pemimpin dewasa'));for(const [key,label]of [['legitimacy','Legitimasi'],['cohesion','Kohesi'],['administration','Administrasi'],['economy','Ketahanan ekonomi'],['military','Militer'],['stability','Stabilitas'],['power','Kekuatan']]){const row=el('div',undefined,'government-stat');row.append(el('span',label),el('strong',Math.round(g[key])+'/100'),meter(g[key]));$('government').append(row);}const habits=Object.entries(g.habits).map(([key,n])=>({commons:'Kepemilikan bersama',private:'Kekayaan pribadi',care:'Perawatan & berbagi',coercion:'Pemaksaan',diversity:'Keragaman kerja',coordination:'Keseragaman tindakan'}[key]+': '+Math.round(n*100)+'%'));$('government').append(el('small',habits.join(' · ')),el('p','Bentuk pemerintahan mengikuti kebiasaan yang bertahan; kekuatannya bergantung pada kondisi warga dan lembaga. Ini model permainan.'));$('language').replaceChildren(el('h2','Bahasa '+l.name),el('p',LANGUAGE_STAGES[l.stage]+' · Komunikasi '+l.practice.toFixed(1)+' · Penulisan '+l.writing.toFixed(1)));for(const [key,word]of Object.entries(l.lexicon))$('language').append(el('small',({food:'Pangan',water:'Air',shelter:'Tempat tinggal',peace:'Damai',danger:'Bahaya',work:'Kerja',trade:'Perdagangan',knowledge:'Pengetahuan'}[key]||key)+' → '+(l.stage===0?'isyarat '+word:word)));$('language').append(el('p','Contoh pesan damai/perdagangan: '+sampleSentence(c)));for(const id of c.contacts){const other=state.world.settlements.find(x=>x.id===id),b=l.bridges[id];$('language').append(el('p',other.name+': pemahaman '+Math.round(understanding(c,other)*100)+'% · '+(b?.incidents||0)+' salah paham'));}}
