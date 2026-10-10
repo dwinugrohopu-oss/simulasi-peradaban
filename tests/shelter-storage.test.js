@@ -50,7 +50,7 @@ test('real beds reserve places for expedition crew; homelessness worsens rest, s
 test('version seven saves migrate without inventing a warehouse or changing supplies, tools and Q',()=>{
  const old=legacyWorld(6,0);old.version=7;old.world.settlements[1].state.version=7;old.buildings.hut=2;
  for(const st of [old,old.world.settlements[1].state]){delete st.buildings.warehouse;for(const a of st.agents){delete a.home;delete a.illnessDays;}}
- const restored=validateSave(old);assert.equal(restored.version,10);assert.equal(restored.buildings.warehouse,0);assert.equal(restored.food,old.food);assert.equal(restored.buildings.hut,2);assert.equal(restored.agents.filter(a=>a.home).length,6);assert.deepEqual(restored.agents[0].q,old.agents[0].q);assert.deepEqual(validateSave(restored),restored);
+ const restored=validateSave(old);assert.equal(restored.version,11);assert.equal(restored.buildings.warehouse,0);assert.equal(restored.food,old.food);assert.equal(restored.buildings.hut,2);assert.equal(restored.agents.filter(a=>a.home).length,6);assert.deepEqual(restored.agents[0].q,old.agents[0].q);assert.deepEqual(validateSave(restored),restored);
  const bad=structuredClone(restored);bad.agents[1].home=bad.agents[0].home;assert.throws(()=>validateSave(bad));bad.agents[1].home=null;bad.agents[0].illnessDays=-1;assert.throws(()=>validateSave(bad));
 });
 
@@ -68,7 +68,7 @@ test('more equipment drives warehouse planning and broken weapon archives are pr
  const s=newGame(8,0);s.buildings.warehouse=1;s.tools=Array.from({length:41},(_,i)=>tool(s,i+1));s.nextToolId=42;assert.ok(buildingNeeds(s).find(n=>n.key==='warehouse').score>0);
  s.tools=[];s.agents[0].equipment={weapon:1};s.weapons=Array.from({length:512},(_,i)=>({id:i+1,type:'stone',condition:i===0?100:0,uses:0,owner:i===0?s.agents[0].id:null}));s.nextWeaponId=513;
  s.world.settlements[0].discoveries=['agriculture','weaponry'];s.world.settlements[0].stage=1;s.buildings.arsenal=1;s.wood=100;s.stone=20;
- equipmentWork(s,s.agents[0],'forgeWeapon',1,log);assert.equal(s.weapons.length,512);assert.ok(s.weapons.some(w=>w.id===1&&w.owner===s.agents[0].id));assert.ok(s.weapons.some(w=>w.id===513));validateSave(s);
+ equipmentWork(s,s.agents[0],'forgeWeapon',1,log);assert.equal(s.weapons.length,512);assert.ok(s.weapons.some(w=>w.id===1&&w.condition===100&&w.owner===null));assert.ok(s.weapons.some(w=>w.id===513&&w.owner===s.agents[0].id));assert.equal(s.agents[0].equipment.weapon,513);validateSave(s);
 });
 
 

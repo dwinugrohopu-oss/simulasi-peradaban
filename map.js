@@ -9,9 +9,11 @@ const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 export function camera(width=920,height=480){return {x:1600,y:1000,zoom:.24,width,height,planet:0,layer:'planet',governmentOverlay:true,languageOverlay:false,resourceOverlay:true,stockMode:'warehouse',stockCards:[]};}
 export function project(c,x,y){return {x:(x-c.x)*c.zoom+c.width/2,y:(y-c.y)*c.zoom+c.height/2};}
 export function unproject(c,x,y){return {x:(x-c.width/2)/c.zoom+c.x,y:(y-c.height/2)/c.zoom+c.y};}
-export function pan(c,dx,dy){c.x=clamp(c.x-dx/c.zoom,-500,3700);c.y=clamp(c.y-dy/c.zoom,-500,2500);}
-export function zoom(c,factor,x=c.width/2,y=c.height/2){const before=unproject(c,x,y);c.zoom=clamp(c.zoom*factor,.18,2.5);const after=unproject(c,x,y);c.x=clamp(c.x+before.x-after.x,-500,3700);c.y=clamp(c.y+before.y-after.y,-500,2500);}
-export function focus(c,civ){c.layer='planet';c.planet=civ.planet;c.x=civ.x;c.y=civ.y;c.zoom=.85;}
+export function pan(c,dx,dy){c.overview=false;c.x=clamp(c.x-dx/c.zoom,-500,3700);c.y=clamp(c.y-dy/c.zoom,-500,2500);}
+export function zoom(c,factor,x=c.width/2,y=c.height/2){const before=unproject(c,x,y);c.overview=false;c.zoom=clamp(c.zoom*factor,Math.min(.18,planetZoom(c)),2.5);const after=unproject(c,x,y);c.x=clamp(c.x+before.x-after.x,-500,3700);c.y=clamp(c.y+before.y-after.y,-500,2500);}
+export function focus(c,civ){c.overview=false;c.layer='planet';c.planet=civ.planet;c.x=civ.x;c.y=civ.y;c.zoom=.85;}
+function planetZoom(c){return Math.max(.01,Math.min(Math.max(40,c.width-40)/3200,Math.max(40,c.height-180)/2000));}
+export function showPlanet(c,planet=c.planet){c.layer='planet';c.planet=planet;c.x=1600;c.y=1000;c.zoom=planetZoom(c);c.overview=true;}
 export function hit(root,c,x,y){const p=unproject(c,x,y);if(c.layer==='space')return root.world.planets.find(o=>Math.hypot(o.x-p.x,o.y-p.y)<Math.max(100,28/c.zoom));return root.world.settlements.find(o=>o.planet===c.planet&&Math.hypot(o.x-p.x,o.y-p.y)<Math.max(80,25/c.zoom));}
 export function hitResource(root,c,x,y,selected){if(c.layer!=='planet'||!c.resourceOverlay)return null;const p=unproject(c,x,y);return root.world.nodes.filter(n=>n.planet===c.planet&&n.seenBy.includes(selected)).find(n=>Math.hypot(n.x-p.x,n.y-p.y)<14/c.zoom)||null;}
 export function polityColor(id){return ['#8fc5a0','#c6a0de','#e1b16d','#8dbbd9','#de9797','#b9c87d','#95d0c6','#ccadc2'][(id-1)%8];}

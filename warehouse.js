@@ -1,11 +1,11 @@
-import {ARMORS} from './equipment.js';
+import {ARMORS,WEAPONS} from './equipment.js';
 import {storageSplit,customStorage,equipmentStorage} from './storage.js';
 import {stateOf} from './world.js';
 import {RESOURCE_KEYS,balance} from './economy.js';
 
 export const STOCK_NAMES={food:'Pangan',wood:'Kayu',stone:'Batu',ore:'Bijih',fiber:'Serat',bone:'Tulang',metal:'Logam',fuel:'Bahan bakar',energy:'Energi',alloy:'Paduan',mana:'Mana'};
 export const TOOL_NAMES={wood:'Alat penebangan',stone:'Alat penggalian',farm:'Alat pertanian'};
-export const WEAPON_NAMES={stone:'Senjata batu',metal:'Senjata logam',ballistic:'Senjata balistik'};
+export const WEAPON_NAMES=Object.fromEntries(Object.entries(WEAPONS).map(([k,v])=>[k,v.name]));
 export const VEHICLE_NAMES={cart:'Kereta angkut',motor:'Kendaraan bermotor',biotic:'Kendaraan biotik'};
 
 // A warehouse is a view of existing shared stock, not a second inventory.
@@ -21,7 +21,7 @@ export function equipmentRows(s,category){
  const assigned=new Set(s.agents.filter(a=>a.alive).flatMap(a=>['wood','stone','farm'].map(k=>a.equipment[k]).filter(Boolean)));
  const leased=new Set(s.agents.filter(a=>a.alive&&a.journey).map(a=>a.journey.vehicle));
  const rows=new Map(),locations=equipmentStorage(s),armed=new Set(s.agents.filter(a=>a.alive).map(a=>a.equipment[category==='armors'?'armor':'weapon']));
- for(const item of items){const key=tools?item.job:item.type,row=rows.get(key)||{key,name:names[key]||key,total:0,available:0,used:0,pending:0,archive:0,condition:0,healthy:0,stored:0,ground:0};row.total++;
+ for(const item of items){const key=tools?item.job:item.type,row=rows.get(key)||{key,name:names[key]||key,total:0,available:0,used:0,pending:0,archive:0,condition:0,healthy:0,stored:0,ground:0,ammo:0,ammoCapacity:0};row.total++;if(category==='weapons'&&healthyWeapon(item)){row.ammo+=item.ammo||0;row.ammoCapacity+=WEAPONS[item.type].ammoCapacity||0;}
   const healthy=item.condition>0&&(!tools||item.status==='ready');
   if(healthy||tools&&item.status==='prototype'&&item.condition>0){const location=locations.stored[category].has(item.id)?'stored':locations.carried[category].has(item.id)?'carried':'ground';row[location]=(row[location]||0)+1;}
   if(healthy){const used=tools?assigned.has(item.id):category==='vehicles'?leased.has(item.id):armed.has(item.id);row[used?'used':'available']++;row.healthy++;row.condition+=tools?item.condition/item.physics.durability*100:item.condition;}
@@ -30,3 +30,5 @@ export function equipmentRows(s,category){
  }
  return [...rows.values()].map(row=>({...row,condition:row.healthy?row.condition/row.healthy:null}));
 }
+
+const healthyWeapon=item=>item.condition>0;

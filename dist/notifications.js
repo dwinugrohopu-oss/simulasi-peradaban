@@ -6,13 +6,15 @@ export function classifyNotice(text){
  for(const [pattern,kind,title]of rules)if(pattern.test(text))return {kind,title};return null;
 }
 export function createNotices(){
- let seen=new WeakSet(),queue=[],current=null,expires=0,serial=0;
+ let seen=new WeakSet(),queue=[],current=null,expires=0,serial=0,visible=[];
  const visit=(root,fn)=>{for(const civ of root.world.settlements)for(const entry of stateOf(root,civ).logs.slice().reverse()){if(civ.id===1&&root.world.settlements.some(c=>c.id!==1&&entry.text.startsWith(c.name+': ')))continue;fn(civ,entry);}};
  return {
- reset(root){seen=new WeakSet();queue=[];current=null;expires=0;visit(root,(_,entry)=>seen.add(entry));},
+ reset(root){seen=new WeakSet();queue=[];current=null;expires=0;visible=[];visit(root,(_,entry)=>seen.add(entry));},
  collect(root){const batch=new Set(),fresh=[];visit(root,(civ,entry)=>{if(seen.has(entry))return;seen.add(entry);const localEvent=stateOf(root,civ).objects.some(o=>o.kind==='event'&&entry.text.startsWith('Objek baru: '+o.descriptor.name+'.'));const info=classifyNotice(entry.text)||(localEvent?{kind:'event',title:'Peristiwa baru'}:null),key=civ.id+':'+entry.day+':'+entry.text;if(!info||batch.has(key))return;batch.add(key);fresh.push({...info,id:++serial,text:entry.text,day:entry.day,civId:civ.id,name:civ.name});});queue.push(...fresh.sort((a,b)=>a.day-b.day));queue=queue.slice(-12);},
  show(now){if(current&&now>=expires)current=null;if(!current&&queue.length){current=queue.shift();expires=now+10000;}return current;},
- dismiss(){current=null;expires=0;},
+ list(now){visible=visible.filter(n=>now<n.expires);if(current){visible.push({...current,expires});current=null;}visible.push(...queue.splice(0).map(n=>({...n,expires:now+10000})));visible=visible.slice(-12);return visible;},
+ dismiss(id){if(id===undefined){current=null;expires=0;}else{visible=visible.filter(n=>n.id!==id);queue=queue.filter(n=>n.id!==id);if(current?.id===id)current=null;}},
+ dismissAll(){visible=[];queue=[];current=null;expires=0;},
  get waiting(){return queue.length;}
  };
 }
