@@ -8,7 +8,8 @@ export function initWildlands(r){
  for(let planet=0;planet<3;planet++)for(const [i,x]of [1400,2700].entries()){
   const id=w.wildlands.length+1,area={id,planet,x,y:1000,radius:250,prey:true,name:i?'Pegunungan Logam':'Hutan Lebat',seenBy:[]};w.wildlands.push(area);
   const forests=[[-160,0],[160,0],[0,-160],[0,160],[-160,-160],[-160,160],[160,-160],[160,160]].filter(([dx,dy])=>w.settlements.filter(c=>c.planet===planet).every(c=>Math.hypot(c.x-x-dx,c.y-1000-dy)>=350)).slice(0,4).map(([dx,dy])=>['wood',dx,dy]);
-  for(const [kind,dx,dy]of [['wood',0,0],...forests,['food',-200,-150],['ore',100,200]]){const nodeId=w.nodes.length+1,capacity=kind==='wood'?4000+hash(r.seed,nodeId)%3001:kind==='ore'?2000+hash(r.seed,nodeId)%3001:1000+hash(r.seed,nodeId)%2001;w.nodes.push({id:nodeId,planet,kind,x:x+dx,y:1000+dy,stock:capacity,capacity,renewal:kind==='food'?.8:kind==='wood'?.16:0,owner:null,seenBy:[],tier:'wild',wildland:id});}
+  const stones=[[-140,-140],[140,-140],[-140,140],[140,140],[0,220],[0,-220]].filter(([dx,dy])=>w.settlements.filter(c=>c.planet===planet).every(c=>Math.hypot(c.x-x-dx,c.y-1000-dy)>=350)).slice(0,2).map(([dx,dy])=>['stone',dx,dy]);
+  for(const [kind,dx,dy]of [['wood',0,0],...forests,...stones,['food',-200,-150],['ore',100,200]]){const nodeId=w.nodes.length+1,capacity=kind==='wood'?2*(4000+hash(r.seed,nodeId)%3001):kind==='stone'?2*(2000+hash(r.seed,nodeId)%2001):kind==='ore'?2000+hash(r.seed,nodeId)%3001:1000+hash(r.seed,nodeId)%2001;w.nodes.push({id:nodeId,planet,kind,x:x+dx,y:1000+dy,stock:capacity,capacity,renewal:kind==='food'?.8:kind==='wood'?.16:0,owner:null,seenBy:[],tier:'wild',wildland:id});}
   for(let j=0;j<6;j++)spawn(r,area,j);for(const n of w.nodes)if(n.planet===planet&&Math.hypot(n.x-area.x,n.y-area.y)<=area.radius){n.wildland=id;n.tier='wild';if(n.capacity<1000)n.stock=n.capacity=1000+hash(r.seed,n.id)%2001;}
  }
 }
