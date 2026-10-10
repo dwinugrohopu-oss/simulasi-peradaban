@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.2.1**. Enam perintis memulai permukiman. Warga memilih kegiatan, mempelajari pekerjaan, membangun sesuai kebutuhan, dan membentuk generasi berikutnya. Pemain dapat mengamati sepenuhnya atau mengubah prioritas dan memasukkan objek melalui prompt.
+Prototype **0.4.0**. Enam perintis memulai permukiman, sementara peradaban alien sudah hidup di planet lain. Warga memilih kegiatan, mempelajari pekerjaan, membangun sesuai kebutuhan, dan membentuk generasi berikutnya. Pemain dapat mengamati sepenuhnya atau mengubah prioritas dan memasukkan objek melalui prompt.
 
 ## Warga, sifat, dan keahlian
 
@@ -90,7 +90,7 @@ npm test
 npm run build
 ```
 
-Build menyalin lima file frontend ke `dist/`. Static Site tetap dapat menjalankan seluruh simulasi dan prompt lokal. Membuka `index.html` melalui `file://` tidak didukung karena JavaScript modules.
+Build menyalin sembilan file frontend ke `dist/`. Static Site tetap dapat menjalankan seluruh simulasi dan prompt lokal. Membuka `index.html` melalui `file://` tidak didukung karena JavaScript modules.
 
 ## Render: Web Service untuk LLM
 
@@ -126,7 +126,7 @@ Satu hari = 4 detik; 60 hari = satu tahun. Saat kembali, game menghitung maksima
 
 ## Pengujian
 
-30 pengujian mencakup Q-learning, sifat/efisiensi, pembangunan otonom, populasi, skill, efek objek, migrasi versi lama, waktu berlalu, storage gagal, ekspor/impor, preview/apply, endpoint backend, autentikasi, rate limit, serta kontrak Gemini API dengan respons tiruan. Panggilan LLM sungguhan memerlukan kunci API dan belum diuji dalam lingkungan pengembangan ini. Smoke test UI memakai DOM minimal; verifikasi visual di browser belum dilakukan.
+52 pengujian mencakup Q-learning, sifat/efisiensi, pembangunan otonom, populasi, skill, efek objek, migrasi versi lama, waktu berlalu, storage gagal, ekspor/impor, preview/apply, endpoint backend, autentikasi, rate limit, serta kontrak Gemini API dengan respons tiruan. Panggilan LLM sungguhan memerlukan kunci API dan belum diuji dalam lingkungan pengembangan ini. Smoke test UI memakai DOM minimal; verifikasi visual di browser belum dilakukan.
 
 ### Memperbarui deployment OpenAI lama
 
@@ -137,4 +137,33 @@ Warga dapat bersifat egois, serakah, pendendam, agresif, kejam atau manipulatif.
 
 Penelitian menghabiskan bahan untuk prototipe lalu menguji pada tindakan penelitian berikutnya. Kayu, batu, tulang, serat, bentuk mata dan sambungan menentukan massa, daya tahan, potensi hasil dan risiko. Warga mencatat kegagalan, mengubah komponen dan meniru rancangan berhasil. Alat dipakai otomatis untuk kayu, batu dan ladang; aus dan perlu diganti. Ini fisika sederhana dalam satuan game, bukan mesin fisika 3D atau penemuan objek tanpa batas. Gemini tetap hanya untuk rancangan intervensi dunia.
 
-Simpanan versi 1 dan 2 dimigrasikan ke versi 3 tanpa menghapus progres atau bobot Q lama. Render tetap memakai `npm start`; tidak ada variabel lingkungan baru.
+Simpanan versi 1, 2, dan 3 dimigrasikan ke versi 4 tanpa menghapus progres atau bobot Q lama. Render tetap memakai `npm start`; tidak ada variabel lingkungan baru.
+
+## Versi 0.4: dunia luas, sihir, alien dan antariksa
+
+Pilih peradaban pada daftar atau ketuk permukiman. Geser peta dengan mouse/jari, zoom dengan roda mouse, dua jari atau tombol ±. Tampilan **Tata surya** memperlihatkan tiga planet dan ekspedisi; ketuk planet untuk melihat permukaannya. Semua peradaban terlihat bagi pengamat sejak awal, tetapi penduduk baru mengenal pihak lain setelah pertemuan atau komunikasi. Panel penduduk, persediaan, prioritas, penelitian dan prompt mengikuti peradaban yang dipilih. Pratinjau prompt tetap terikat pada tujuan awal meskipun pemain berpindah tampilan.
+
+Setiap peradaban mempunyai simulasi warga dan ekonomi sendiri. Perpecahan membutuhkan keharmonisan rendah, sedikitnya dua warga yang bermasalah, keluhan berkelanjutan, enam orang dewasa serta bekal. Warga pindah membawa pengalaman dan alat; 25% bekal bersama ikut dipindahkan. Konflik antarperadaban berkembang dari kelangkaan, warga agresif dan hubungan buruk, lalu membutuhkan logistik untuk menjadi perang. Perang menghabiskan makanan, kesehatan dan suasana hati sebelum gencatan senjata; tidak ditentukan undian peristiwa.
+
+Sumber mana ada sejak awal. Warga dengan kepekaan ≥75, latihan penelitian ≥20 dan pengetahuan desa ≥40 harus meneliti dekat sumber hingga pengamatan 60. Setelah dipahami, mana membantu pemulihan kesehatan serta pembangunan. Kepekaan ditentukan dari seed/identitas warga; penemuan tidak muncul dari undian tahunan. Alien hidup dan meneliti secara mandiri sejak awal; kontak radio membutuhkan astronomi, elektronika dan pengamatan kedua pihak.
+
+| Penemuan | Prasyarat utama |
+|---|---|
+| Pertanian | Ladang, pengetahuan 15, penelitian 8 |
+| Peleburan logam | Pertanian, dua uji alat, pengetahuan 70, penelitian 20 |
+| Mesin | Logam, alat dipakai 10 kali, pengetahuan 160, penelitian 35 |
+| Astronomi | Mesin, balai belajar, pengetahuan 220, penelitian 60 |
+| Listrik | Mesin, pengetahuan 300, penelitian 70 |
+| Elektronika/radio | Listrik, pengetahuan 500, penelitian 100 |
+| Roket | Elektronika, astronomi, pengetahuan 850, penelitian 150 |
+| Penunjang kehidupan | Roket, pengetahuan 1000, penelitian 170 |
+| Penerbangan antariksa | Penunjang kehidupan, pengetahuan 1200, penelitian 200 |
+| Koloni planet | Antariksa, pengetahuan 1500, penelitian 240 |
+
+Semua penemuan juga membutuhkan dan menghabiskan bahan. Metalurgi mengubah batu/kayu menjadi logam dan bahan bakar; mesin menghasilkan paduan; pembangkit menghabiskan bahan bakar untuk energi. Penelitian nyata menyiapkan ekspedisi, yang menghabiskan paduan/bahan bakar/energi dan menempuh perjalanan 40 hari. Habitat, bekal dan warga yang cukup memungkinkan koloni. Jalur tersebut dapat tercapai melalui tindakan otonom tanpa prompt pemain.
+
+Prompt mendukung **resource baru bernama bebas** dengan sifat kekerasan, kekuatan, energi, sihir, bantuan penelitian, penyembuhan dan toksisitas. Warga mengumpulkan lalu menggunakannya; stok bisa habis atau pulih jika terbarukan. Ada kategori mineral, bahan bakar, pangan, obat, arcane dan energi. Contoh: “Tambahkan kristal aether yang menyimpan energi, membantu penelitian tetapi beracun.”
+
+Peristiwa baru dapat menggunakan pemicu langsung, keharmonisan rendah, zaman listrik atau sihir dikuasai. Selain perang, pemberontakan, sinyal kontak dan pengamatan sihir, event bernama bebas bisa menaikkan/menurunkan pangan, kesehatan, keharmonisan, penelitian, energi atau mana. Prompt tidak menulis aturan atau kode baru; efek selalu dibatasi koefisien yang didukung dan dijelaskan pada pratinjau. Mode lokal mengenali kata kunci tambahan perang, perpecahan/pemberontakan, alien/kontak, sihir/mana, resource/kristal/besi/minyak/uranium.
+
+Batas prototipe: 8 peradaban, 3 planet, 16 warga aktif per peradaban, 16 resource khusus per peradaban, 24 sumber mana dan 24 peristiwa dunia. Simulasi sosial, industri, fisika dan antariksa memakai model sederhana; belum ada pathfinding, orbit fisik, diplomasi chatbot, atau mekanik tak terbatas yang dibuat LLM. Semua progres dunia ikut disimpan dan diekspor. File impor maksimal 16 MB. Migrasi simpanan versi 3 mempertahankan alat, model Q, umur dan persediaan; populasi alien serta sumber mana ditambahkan saat migrasi. Tidak perlu env Render baru.

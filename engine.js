@@ -1,8 +1,9 @@
+import {initEconomy,aptitude,createWorld,tickWorld,validateEconomy,validateWorld,addWorldObject} from './world.js';
 import {experiment,useTool,evaluateDesign} from './physics.js';
 import {initCitizen,deposit,cooperation,interact,revengeTarget} from './society.js';
 import {validateDescriptor} from './world-schema.js';
 /* Pure simulation and tabular Q-learning; shared by the browser and Node tests. */
-export const VERSION=3, DAY_MS=4000, OFFLINE_CAP=8*60*60*1000;
+export const VERSION=4, DAY_MS=4000, OFFLINE_CAP=8*60*60*1000;
 export const ACTIONS=['forage','wood','stone','farm','build','research','eat','rest','social','fish','steal','intimidate','revenge','persuade','share'];
 export const LABELS={forage:'Mencari makanan',wood:'Menebang kayu',stone:'Menambang batu',farm:'Bertani',build:'Membangun',research:'Meneliti',eat:'Makan',rest:'Istirahat',social:'Bersosialisasi',fish:'Memancing',steal:'Mencuri',intimidate:'Mengintimidasi',revenge:'Membalas dendam',persuade:'Memanipulasi',share:'Berbagi'};
 export const BUILDINGS={hut:{name:'Rumah',wood:35,stone:10,work:30,tip:'Kapasitas +3 penduduk.'},farm:{name:'Ladang',wood:25,stone:5,work:25,tip:'Panen pasif dan membuka tindakan bertani.'},school:{name:'Balai belajar',wood:60,stone:35,work:60,tip:'Penelitian +50% dan belajar lebih cepat.'},well:{name:'Sumur',wood:30,stone:45,work:40,tip:'Pemulihan kesehatan harian +0,3.'}};
@@ -32,10 +33,10 @@ export function log(s,text){s.logs.unshift({day:s.day,text});s.logs=s.logs.slice
 export function population(s){return s.agents.filter(a=>a.alive);}
 export function capacity(s){return 3+s.buildings.hut*3;}
 export function era(s){return s.tech>=200?'Peradaban berkembang':s.tech>=60?'Desa agraris':'Permukiman awal';}
-export function newAgent(s,origin='immigrant'){const id=s.nextId++,a={id,name:NAMES[(id-1)%NAMES.length]+(id>16?' '+Math.ceil(id/16):''),age:origin==='birth'?0:16+Math.floor(random(s)*18),origin,traits:chooseTraits(s),alive:true,health:100,hunger:15,energy:90,mood:70,action:'rest',steps:0,rewardSum:0,explorations:0,lastReward:0,q:{},visits:{},skills:Object.fromEntries(ACTIONS.map(k=>[k,0])),color:Math.floor(random(s)*5),exitReason:null};initCitizen(a);s.agents.push(a);if(s.agents.length>100){let excess=s.agents.length-100;s.agents=s.agents.filter(item=>item.alive||excess--<=0);}return a;}
-export function newGame(seed=Date.now(),now=Date.now()){
+export function newAgent(s,origin='immigrant'){const id=s.nextId++,a={id,name:NAMES[(id-1)%NAMES.length]+(id>16?' '+Math.ceil(id/16):''),age:origin==='birth'?0:16+Math.floor(random(s)*18),origin,traits:chooseTraits(s),alive:true,health:100,hunger:15,energy:90,mood:70,action:'rest',steps:0,rewardSum:0,explorations:0,lastReward:0,q:{},visits:{},skills:Object.fromEntries(ACTIONS.map(k=>[k,0])),color:Math.floor(random(s)*5),exitReason:null};initCitizen(a);a.arcaneSensitivity=aptitude(s.seed,a.id);s.agents.push(a);if(s.agents.length>100){let excess=s.agents.length-100;s.agents=s.agents.filter(item=>item.alive||excess--<=0);}return a;}
+export function newGame(seed=Date.now(),now=Date.now(),options={}){
  const s={version:VERSION,rng:(Number(seed)>>>0)||1,seed:(Number(seed)>>>0)||1,day:0,food:65,wood:30,stone:15,fiber:8,bone:4,tools:[],nextToolId:1,prototypes:0,experiments:0,tech:0,harmony:75,policy:'balanced',buildings:{hut:1,farm:0,school:0,well:0},project:null,agents:[],nextId:1,logs:[],paused:false,lastSaved:now,carryMs:0,history:[],totalSteps:0,deathCount:0,birthCount:0,immigrationCount:0,emigrationCount:0,objects:[],nextObjectId:1};
- for(let i=0;i<6;i++)newAgent(s,'founder');log(s,'Enam perintis tiba. Mereka mulai mencoba dan belajar.');return s;
+ for(let i=0;i<6;i++)newAgent(s,'founder');log(s,'Enam perintis tiba. Mereka mulai mencoba dan belajar.');initEconomy(s);s.world=options.world===false?null:createWorld(s,newGame);return s;
 }
 export function observation(s,a){return [a.hunger>=55?1:0,a.energy<35?1:0,s.food<population(s).length*3?1:0,s.project?1:0,s.harmony<40?1:0,s.policy].join(':');}
 export function available(s,a){if(a.hunger>=85&&(s.food>=1||a.stash.food>=1))return ['eat'];if(a.energy<=5)return ['rest'];if(a.age<16)return ['forage','rest','social',...(s.food>=1&&a.hunger>10?['eat']:[])];const list=['forage','wood','stone','research','rest','social'];if(s.objects.some(o=>o.kind==='river'&&o.stock>=1))list.push('fish');if(s.buildings.farm)list.push('farm');if(s.project)list.push('build');if((s.food>=1||a.stash.food>=1)&&a.hunger>10)list.push('eat');if(Object.values(a.stash).some(n=>n>0))list.push('share');if(a.stash.food<25&&population(s).some(b=>b.id!==a.id&&b.age>=16)){if(a.traits.includes('greedy'))list.push('steal');if(a.traits.includes('manipulative'))list.push('persuade');}if(s.day-a.lastConflict>=10){if(a.traits.some(t=>['aggressive','cruel'].includes(t)))list.push('intimidate');if(a.traits.includes('vengeful')&&revengeTarget(s,a))list.push('revenge');}return list;}
@@ -92,7 +93,7 @@ function annualEvent(s){
  for(const a of population(s)){a.age++;if(a.age>75&&random(s)<.04+(a.age-75)*.008){a.alive=false;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal pada usia '+a.age+' tahun.');}}
 }
 export function tick(s){
- if(s.paused||!population(s).length)return false;
+ if(s.paused||!worldPopulation(s))return false;
  s.day++;const oldEra=era(s);updateObjects(s);autoPlan(s);s.food+=s.buildings.farm*1.2*weatherFactor(s);s.harmony=clamp(s.harmony-.08);
  // Rotate order to avoid consistently privileging one agent over shared food/building resources.
  const agents=population(s),offset=s.day%agents.length;
@@ -101,16 +102,16 @@ export function tick(s){
  demographics(s);for(const a of s.agents){if(!a.alive&&!a.estateSettled){if(a.exitReason==='death')for(const k of ['food','wood','stone']){s[k]+=a.stash[k];a.stash[k]=0;}a.estateSettled=true;for(const t of s.tools)if(t.owner===a.id&&t.status==='prototype')t.status='failed';}if(s.day%60===0&&!a.traits.includes('vengeful'))for(const k of Object.keys(a.relations))a.relations[k]*=.9;}s.objects=s.objects.filter(o=>o.kind!=='event'||o.remaining>0);
  if(era(s)!==oldEra)log(s,'Peradaban memasuki '+era(s)+'.');
  if(s.day%10===0){s.history.push({day:s.day,pop:population(s).length,food:Math.round(s.food),tech:Math.round(s.tech)});s.history=s.history.slice(-90);}
- if(!population(s).length)log(s,'Permukiman telah berakhir. Arsip pembelajaran tetap tersedia.');return true;
+ tickWorld(s,{tick,newGame,log});if(!worldPopulation(s))log(s,'Seluruh dunia telah berakhir. Arsip pembelajaran tetap tersedia.');return true;
 }
 export function advance(s,elapsedMs){
  const elapsed=Math.min(OFFLINE_CAP,Math.max(0,Number(elapsedMs)||0));
- if(s.paused||!population(s).length)return 0;
+ if(s.paused||!worldPopulation(s))return 0;
  const total=elapsed+s.carryMs,n=Math.floor(total/DAY_MS);s.carryMs=total%DAY_MS;let completed=0;
  for(let i=0;i<n;i++){if(!tick(s))break;completed++;}return completed;
 }
-export function validateSave(value){
- const s=JSON.parse(JSON.stringify(value));const legacy=s?.version===1,upgrade=legacy||s?.version===2;if(upgrade){s.version=VERSION;s.fiber=8;s.bone=4;s.tools=[];s.nextToolId=1;s.prototypes=0;s.experiments=0;for(const a of s.agents||[]){initCitizen(a);for(const k of ACTIONS)if(a.skills&&a.skills[k]===undefined)a.skills[k]=0;for(const values of Object.values(a.q||{}))for(const k of ACTIONS)if(values[k]===undefined)values[k]=0;}}const finite=(x,min,max)=>typeof x==='number'&&Number.isFinite(x)&&x>=min&&x<=max;
+export function validateSave(value,options={}){
+ const s=JSON.parse(JSON.stringify(value));const legacy=s?.version===1,upgrade=legacy||s?.version===2,worldUpgrade=upgrade||s?.version===3;if(upgrade){s.version=VERSION;s.fiber=8;s.bone=4;s.tools=[];s.nextToolId=1;s.prototypes=0;s.experiments=0;for(const a of s.agents||[]){initCitizen(a);for(const k of ACTIONS)if(a.skills&&a.skills[k]===undefined)a.skills[k]=0;for(const values of Object.values(a.q||{}))for(const k of ACTIONS)if(values[k]===undefined)values[k]=0;}}if(worldUpgrade){s.version=VERSION;initEconomy(s);s.world=options.isolated?null:createWorld(s,newGame);}if(options.isolated&&s.world!==null||!options.isolated&&s.world===null)throw Error('Simpanan peradaban harus memiliki struktur dunia yang sesuai.');const finite=(x,min,max)=>typeof x==='number'&&Number.isFinite(x)&&x>=min&&x<=max;
  if(!s||s.version!==VERSION||!finite(s.rng,1,4294967295)||!finite(s.seed,1,4294967295)||!finite(s.day,0,1e8)||!finite(s.nextId,1,1e7)||!finite(s.lastSaved,0,1e16)||!finite(s.carryMs,0,DAY_MS)||typeof s.paused!=='boolean'||!Object.hasOwn(POLICIES,s.policy))throw Error('Format simpanan tidak cocok.');
  for(const key of ['food','wood','stone','tech','harmony','totalSteps','deathCount'])if(!finite(s[key],0,1e12))throw Error('Nilai simpanan tidak valid.');
  for(const key of Object.keys(BUILDINGS))if(!Number.isInteger(s.buildings?.[key])||!finite(s.buildings[key],0,8))throw Error('Bangunan simpanan tidak valid.');
@@ -132,11 +133,11 @@ export function validateSave(value){
  if(!Array.isArray(s.objects)||s.objects.length>24)throw Error('Objek dunia tidak valid.');
  const objectIds=new Set();for(const o of s.objects){validateDescriptor(o.descriptor);if(!Number.isInteger(o.id)||o.id<1||o.id>=s.nextObjectId||objectIds.has(o.id)||o.kind!==o.descriptor.kind||!finite(o.stock,0,1000)||!finite(o.remaining,0,180))throw Error('Objek simpanan tidak valid.');objectIds.add(o.id);}
  for(const a of s.agents)if(!Array.isArray(a.traits)||a.traits.length!==2||new Set(a.traits).size!==2||a.traits.some(k=>!Object.hasOwn(TRAITS,k))||!['founder','birth','immigrant'].includes(a.origin)||![null,'death','emigration'].includes(a.exitReason))throw Error('Sifat penduduk tidak valid.');
- validateSociety(s,finite);return s;
+ validateSociety(s,finite);validateEconomy(s,finite);validateWorld(s,validateSave,validateDescriptor,finite);return s;
 }
 
-export function applyObject(s,value){
- const d=validateDescriptor(value);
+export function applyObject(s,value,civId=1){
+ const d=validateDescriptor(value);if(s.world){const civ=s.world.settlements.find(c=>c.id===Number(civId));if(!civ)throw Error('Peradaban tujuan tidak dikenal.');if(addWorldObject(s,civ,d,log))return d;if(civ.id!==1)return applyObject(civ.state,d);}else if(['resource','magic'].includes(d.kind)||d.kind==='event'&&['war','rebellion','contact','awakening','custom'].includes(d.event))throw Error('Objek ini memerlukan dunia induk.');
  if(s.objects.length>=24)throw Error('Dunia sudah memiliki 24 objek.');
  if(d.kind==='building'&&s.buildings[d.building]+d.amount+(s.project?.key===d.building?1:0)>8)throw Error('Bangunan melewati batas 8 per jenis.');
  const o={id:s.nextObjectId++,kind:d.kind,descriptor:d,stock:d.richness*80,remaining:d.kind==='event'?d.duration:0};
@@ -186,3 +187,5 @@ function validateSociety(s,finite){
  for(const [job,id]of Object.entries(a.equipment))if(!['wood','stone','farm'].includes(job)||!s.tools.some(t=>t.id===id&&t.owner===a.id&&t.job===job))throw Error('Peralatan warga tidak valid.');
  }
 }
+
+export function worldPopulation(s){return population(s).length+(s.world?s.world.settlements.filter(c=>c.id!==1).reduce((n,c)=>n+population(c.state).length,0):0);}
