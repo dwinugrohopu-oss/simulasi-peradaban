@@ -1,8 +1,26 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.10.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.12.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
+
+## Wilayah berbahaya dan perburuan
+
+Dunia baru menempatkan empat desa manusia pada jarak 1.500–2.122 satuan: **15–22 hari berjalan kaki** dengan kecepatan dasar 100/hari, dalam rentang permintaan 15–25 hari. Setiap desa pendiri memiliki keluarga bahasa sendiri. Koloni dan pemekaran tetap mewarisi bahasa induknya. Simpanan lama mempertahankan posisi desa, bahasa, deposit dan perjalanan; wilayah berbahaya tidak ditambahkan saat migrasi.
+
+Setiap planet memiliki dua wilayah teritorial: **Hutan Lebat** dan **Pegunungan Logam**, masing-masing radius 250. Deposit di dalamnya berisi 1.000–3.000 pangan liar, kayu atau bijih. Bijih tetap tidak terbarukan. Deposit biasa tetap kecil dan tersebar; sedikit bijih di wilayah aman memungkinkan persiapan peralatan sebelum mendatangi deposit besar. Area ditampilkan setelah teramati; ketuk deposit untuk membaca jenis, jumlah dan statistik hewan buasnya.
+
+Tiap wilayah menampung enam satwa: dua rusa yang merumput dekat permukiman, dua serigala, satu babi hutan dan satu beruang dengan statistik berbeda. Rusa dapat diburu menggunakan senjata batu tanpa pelindung dan tidak menyerang pelintas. Hewan tidak menyerbu desa. Pelintas wilayahnya dapat diserang, termasuk pada perjalanan pulang; penilaian jalur menggunakan segmen perjalanan sehingga kendaraan cepat tidak melewati bahaya dengan teleportasi. Populasi yang masih memiliki minimal dua hewan mendapat satu satwa pengganti setiap 120 hari sampai enam per wilayah; rusa mengisi kembali padang rumput yang kosong pada dunia baru. Hewan mati tidak hidup kembali.
+
+**Serangan, pertahanan dan kecepatan warga** dihitung dari kekuatan, ketahanan, disiplin, kesehatan, energi, latihan bertahan/berburu/menghindar, serta kondisi senjata dan pelindung. Kecepatan menentukan siapa menyerang dahulu saat menghadapi hewan buas dan peluang warga kabur. Rusa hanya membalas setelah pemburu menyerang. Serangan dibandingkan dengan pertahanan lawan; pertarungan dapat berlangsung beberapa hari dan menyebabkan luka parah atau kematian. Senjata dan pelindung aus saat digunakan. Pemburu dapat melawan atau kabur; hewan yang kalah menghasilkan muatan pangan dan tulang yang masuk stok setelah pulang, dibatasi kapasitas angkut.
+
+Satwa memiliki tingkat kesulitan: rusa (1), serigala dan babi hutan (2), serta beruang (3). Setiap serangan menggunakan senjata melatih kemampuan berburu dan mengurangi ketahanan senjata; berangkat saja tidak menambah latihan. Hasil dan luka perjalanan masuk pembelajaran keputusan warga. Save lama mempertahankan jenis satwanya.
+
+Senjata batu sederhana dapat dibuat di gudang dari kayu dan batu; senjata lanjut tetap membutuhkan arsenal dan penemuan. Pelindung serat/tulang dibuat dari 12 serat, 3 tulang dan 4 kayu; pelindung logam dan paduan membutuhkan penemuan serta bahan industrinya. Setiap warga memiliki satu slot pelindung; statistik dan latihan tampil pada Detail penduduk. Pelindung mengikuti aturan gudang, tanah, kerusakan dan perpindahan pemilik.
+
+Warga mempersiapkan perlengkapan dan memperkirakan risiko sebelum sengaja berburu. Mereka menghindari jalur **yang sudah diketahui** berbahaya jika belum siap; wilayah yang belum diketahui tetap berisiko saat dijelajahi. Keputusan melawan/kabur memiliki konteks Q tersendiri, dan luka/hasil buruan tetap memperbarui keputusan perjalanan awal.
+
+Penilaian pemerintahan tidak lagi menyamakan kemiskinan dengan kebersamaan: kebiasaan komunal terutama berasal dari ideologi warga dan tindakan berbagi. Skor komunis lebih bergantung pada kebiasaan tersebut; liberal mempertimbangkan kebebasan, autokrasi mempertimbangkan otoritas, dan hive mind memerlukan kecenderungan komunal selain koordinasi serta penemuannya. Perubahan memerlukan 90 hari kandidat yang jelas, sehingga desa dapat tetap berupa dewan warga ketika bukti belum kuat. Cadangan pangan juga memperhitungkan kebutuhan kelahiran jika ada tempat tidur dan calon orang tua, supaya penambahan pekerjaan tidak menghentikan regenerasi penduduk.
 
 ## Riset, perjalanan dan lapisan dunia (0.8)
 
@@ -12,7 +30,7 @@ Ada **40 penemuan dalam 10 cabang**, dengan prasyarat lintas cabang. Sihir memak
 
 Setiap fasilitas menampung dua peneliti per hari. Maksimal enam proyek dapat aktif bersamaan. Bahan dibayar sekali saat proyek dimulai; tidak ada progres jika tidak dikerjakan. Kecepatan per peneliti dibagi `1 + 0,15 × (jumlah proyek aktif − 1)`, sehingga paralelisme membagi tenaga dan menambah biaya koordinasi. Proyek dapat berhenti sementara karena peneliti sedang makan, istirahat atau bepergian.
 
-Dunia baru memiliki 36 deposit: 12 per planet, berisi 100–300 unit per deposit. Sumber pangan dan kayu dasar berada dekat desa, sedangkan sebagian batu serta bijih perlu dicari lebih jauh. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
+Dunia baru memiliki 56 deposit: 20 di Bumi Aruna dan 18 per planet lainnya. Deposit biasa berisi 100–300 unit, sedangkan deposit di wilayah berbahaya berisi 1.000–3.000 unit. Sumber pangan dan kayu dasar berada dekat desa, sedangkan sebagian batu serta bijih perlu dicari lebih jauh. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
 
 Kereta, kendaraan bermotor dan kendaraan biotik membutuhkan penemuan, fasilitas, bahan dan perakitan. Kendaraan dipakai satu perjalanan pada satu waktu, mempercepat jarak tempuh, meningkatkan muatan dan aus. Kendaraan bermotor membayar lima bahan bakar per keberangkatan. Bekal diambil saat berangkat dan sisanya dikembalikan setelah pulang. Senjata juga dibuat dengan bahan, dipakai satu penjaga per hari dan aus.
 
@@ -20,7 +38,7 @@ Kelangkaan mendorong eksplorasi. Deposit milik pemerintahan lain membutuhkan hub
 
 Tombol **Batas**, **Bahasa**, **Deposit** tersedia langsung pada layar dunia. Batas mengikuti petak yang dimiliki peradaban/polity; label menampilkan jenis serta kekuatan pemerintahan. Lapisan bahasa menampilkan nama dan tahap bahasanya. Deposit yang sudah ditemukan dapat diketuk untuk melihat stok, sifat terbarukan dan pemilik. Posisi warga/perjalanan terlihat di peta.
 
-Simpanan versi 1–7 dimigrasikan ke versi 8 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan empat desa manusia dan sebaran deposit yang baru, pilih Dunia baru setelah mengunduh cadangan bila diperlukan. Simpanan lama mempertahankan desa dan depositnya.
+Simpanan versi 1–9 dimigrasikan ke versi 10 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan empat desa manusia dan sebaran deposit yang baru, pilih Dunia baru setelah mengunduh cadangan bila diperlukan. Simpanan lama mempertahankan desa dan depositnya.
 
 ## Empat desa dan tabel penduduk (0.10)
 
@@ -28,7 +46,7 @@ Lembah Asal, Lembah Timur, Lembah Seberang dan Lembah Selatan merupakan empat pe
 
 Daftar penduduk memakai tabel **Nama, Sedang apa, Pekerjaan, Umur, Info**. Tombol **Detail** membuka kondisi kesehatan, energi, mood, rumah, sakit, sifat, kemampuan dan slot equipment warga yang dipilih. Detail ditutup saat memilih desa lain; pembelajaran individu tetap dapat dibuka dari detail.
 
-Desa dan deposit yang sudah ada pada simpanan lama dipertahankan. Pengurangan deposit, stok awal dan pembagian desa hanya diterapkan pada dunia baru; versi format simpanan tetap 8.
+Desa dan deposit yang sudah ada pada simpanan lama dipertahankan. Pengurangan deposit, stok awal dan pembagian desa hanya diterapkan pada dunia baru; versi format simpanan kini 10.
 
 ## Awal tanpa bangunan, rumah dan gudang (0.9)
 
@@ -44,7 +62,7 @@ Kartu warga menampilkan slot penebangan, penggalian, pertanian, senjata dan kend
 
 Panel **Gudang & peralatan** menyatukan bahan dengan tabel per jenis, menampilkan jumlah di gudang, di tanah dan dibawa; prototipe serta arsip/rusak juga dicatat. Pilihan **Gudang / tanah / Per pemerintah / Sembunyikan stok** berada langsung di layar dunia. Kartu peta dapat diketuk untuk rincian; mode pemerintah menjumlahkan semua permukiman dengan `polityId` yang sama, termasuk planet lain, tanpa menghitung muatan perjalanan, bahan proyek atau milik pribadi. Angka besar di peta disingkat; panel memberi angka penuh. Kartu yang tidak muat tanpa bertumpuk disembunyikan dengan prioritas pada permukiman terpilih. Layar terlalu pendek tetap dapat memakai panel gudang.
 
-Save versi 1–7 dimigrasikan ke versi 8. Rumah, persediaan, alat, proyek dan Q lama dipertahankan; gudang tidak dihadiahkan saat migrasi. Aturan mulai tanpa bangunan hanya berlaku pada **Dunia baru**.
+Save versi 1–9 dimigrasikan ke versi 10. Rumah, persediaan, alat, proyek dan Q lama dipertahankan; gudang tidak dihadiahkan saat migrasi. Aturan mulai tanpa bangunan hanya berlaku pada **Dunia baru**.
 
 ## Tampilan utama untuk HP
 
@@ -75,12 +93,16 @@ Kelahiran diperiksa tiap tahun jika ada dua orang dewasa usia 18–45, tempat, p
 
 Setiap warga memiliki dua dari 12 sifat: rajin, penasaran, supel, hemat, pemberani, hati-hati, egois, serakah, pendendam, agresif, kejam dan manipulatif. Sifat memberi kecenderungan pekerjaan dan dapat mengubah efisiensi, penggunaan energi atau eksplorasi. Setiap tindakan meningkatkan keahlian terkait. Tingkatan: Pemula, Terlatih (20), Terampil (60), Ahli (150).
 
-Model keputusan adalah **tabular Q-learning lokal**, dibantu aturan kebutuhan dan pengaman bertahan hidup. State mencakup lapar, energi rendah, pangan langka, proyek, keharmonisan, kebutuhan masyarakat saat ini dan prioritas pemain. Pilihan menggunakan Q + kecenderungan sifat + urgensi kebutuhan; eksplorasi tetap memungkinkan tindakan lain. Warga tidak merupakan agen LLM.
+Model keputusan adalah **tabular Q-learning lokal**, dibantu aturan kebutuhan dan pengaman bertahan hidup. State mencakup lapar, energi rendah, kesehatan, rumah, ladang, kelangkaan/jarak sumber pangan, proyek, keharmonisan, kebutuhan masyarakat dan prioritas pemain. State perjalanan terpisah mencakup fase, lapar, energi, kesehatan dan makanan yang benar-benar dibawa. Pilihan menggunakan Q + kecenderungan sifat + urgensi kebutuhan; eksplorasi tetap memungkinkan tindakan lain. Warga tidak merupakan agen LLM.
 
 ```text
 Q(s,a) ← Q(s,a) + α [reward + 0.75 × max Q(s',a') − Q(s,a)]
 α = 0.16; dengan balai belajar 0.22
 ```
+
+Perjalanan memberi hadiah berdasarkan muatan yang benar-benar tiba; berangkat, bergerak dan memanen tidak otomatis diberi hadiah. Waktu perjalanan dan kehilangan kesehatan dikenai penalti. Keputusan awal juga diperbarui saat pulang atau meninggal dengan akumulasi hasil dibagi akar durasi, α=0.24 dan nilai lanjutan didiskonto 0.75^durasi. Catatan perjalanan ikut tersimpan. Memori warga dibatasi 512 state untuk dunia baru (arsip lama hingga 1.000 state tetap dapat dimuat); Q lama dipakai sebagai nilai awal untuk konteks yang lebih rinci.
+
+Warga dapat makan dari bekal/muatan/pribadi di perjalanan, beristirahat dan membatalkan perjalanan untuk pulang. Stok desa tidak dapat dimakan dari jauh. Tanpa bekal, kerusakan kesehatan tambahan terkait kelaparan; tanpa rumah tetap lebih mudah sakit, kurang pulih dan lebih mudah marah. Ladang pertama lebih mendesak saat pangan tipis; proyek terjangkau tidak lagi tertahan oleh bangunan lain yang kekurangan bahan. Eksplorasi bahan ladang bisa menjadi prioritas ketika pangan sementara cukup.
 
 Aturan kolektif memilih kebutuhan/proyek; Q-learning mempelajari keputusan individu. Ini bukan klaim bahwa warga menemukan aturan fisika atau teknologi baru tanpa batas.
 
@@ -140,7 +162,7 @@ Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Buil
 
 Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Save versi 1–7 dimigrasikan ke versi 8, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
+Save versi 1–9 dimigrasikan ke versi 10, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
 Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis. Dunia dengan ribuan warga dapat memerlukan beberapa menit untuk menghitung delapan jam offline; perhitungan ini masih berjalan pada thread utama browser.
 

@@ -10,9 +10,9 @@ export function storageSplit(s,key,amount=balance(s,key)){
 }
 export function customStorage(s,r){const capacity=s.buildings.warehouse*150,stored=Math.min(r.amount,capacity);return {stored,ground:r.amount-stored,capacity};}
 export function equipmentStorage(s){
- const carriedTools=new Set(s.agents.filter(a=>a.alive).flatMap(a=>['wood','stone','farm'].filter(k=>a.action===k||a.journey||a.away).map(k=>a.equipment[k]).filter(Boolean))),carriedWeapons=new Set(s.agents.filter(a=>a.alive).filter(a=>a.action==='defend'||a.journey||a.away).map(a=>a.equipment.weapon)),leased=new Set(s.agents.filter(a=>a.alive&&a.journey).map(a=>a.journey.vehicle));
- let remaining=s.buildings.warehouse*EQUIPMENT_CAPACITY;const stored={tools:new Set(),weapons:new Set(),vehicles:new Set()},carried={tools:carriedTools,weapons:carriedWeapons,vehicles:leased};
- for(const category of ['tools','weapons','vehicles'])for(const item of s[category])if(item.condition>0&&(!item.status||['ready','prototype'].includes(item.status))&&!carried[category].has(item.id)&&remaining>0){stored[category].add(item.id);remaining--;}
+ const carriedTools=new Set(s.agents.filter(a=>a.alive).flatMap(a=>['wood','stone','farm'].filter(k=>a.action===k||a.journey||a.away).map(k=>a.equipment[k]).filter(Boolean))),carriedWeapons=new Set(s.agents.filter(a=>a.alive).filter(a=>a.action==='defend'||a.journey||a.away).map(a=>a.equipment.weapon)),carriedArmors=new Set(s.agents.filter(a=>a.alive&&(a.journey||a.away||a.action==='defend')).map(a=>a.equipment.armor)),leased=new Set(s.agents.filter(a=>a.alive&&a.journey).map(a=>a.journey.vehicle));
+ let remaining=s.buildings.warehouse*EQUIPMENT_CAPACITY;const stored={tools:new Set(),weapons:new Set(),armors:new Set(),vehicles:new Set()},carried={tools:carriedTools,weapons:carriedWeapons,armors:carriedArmors,vehicles:leased};
+ for(const category of ['tools','weapons','armors','vehicles'])for(const item of s[category])if(item.condition>0&&(!item.status||['ready','prototype'].includes(item.status))&&!carried[category].has(item.id)&&remaining>0){stored[category].add(item.id);remaining--;}
  return {stored,carried,capacity:s.buildings.warehouse*EQUIPMENT_CAPACITY};
 }
 export function storageDay(s,log){
@@ -21,16 +21,16 @@ export function storageDay(s,log){
  for(const r of s.customResources){const {ground,stored}=customStorage(s,r),rate=r.category==='food'?.04:r.category==='medicine'?.02:.002;r.amount-=(ground*rate+stored*(r.category==='food'?.002:0))*(r.category==='food'&&ecology?.5:1);}
  for(const a of s.agents.filter(a=>a.alive))for(const key of ['food','wood','stone'])a.stash[key]*=1-(key==='food'?.01:GROUND_DECAY[key]);
  const locations=equipmentStorage(s);let damaged=0;
- for(const category of ['tools','weapons','vehicles'])for(const item of s[category]){
+ for(const category of ['tools','weapons','armors','vehicles'])for(const item of s[category]){
   if(item.condition<=0||item.status&&!['ready','prototype'].includes(item.status))continue;
   const held=locations.carried[category].has(item.id),protectedItem=locations.stored[category].has(item.id);
   const max=category==='tools'?item.physics.durability:100,rate=protectedItem?.0001:held?.001:.006;
   const resistance=category==='tools'?(['metal','alloy'].includes(item.design.head)?.6:1):item.type==='ballistic'||item.type==='motor'?.8:1;
   item.condition=Math.max(0,item.condition-max*rate*resistance);
-  if(item.condition===0){damaged++;if(category==='tools')item.status='broken';if(category==='weapons')item.owner=null;
+  if(item.condition===0){damaged++;if(category==='tools')item.status='broken';if(category==='weapons'||category==='armors')item.owner=null;
    for(const a of s.agents){
     if(category==='tools')for(const slot of ['wood','stone','farm'])if(a.equipment[slot]===item.id)delete a.equipment[slot];
-    if(category==='weapons'&&a.equipment.weapon===item.id)delete a.equipment.weapon;
+    if(category==='weapons'&&a.equipment.weapon===item.id)delete a.equipment.weapon;if(category==='armors'&&a.equipment.armor===item.id)delete a.equipment.armor;
     if(category==='vehicles'&&a.journey?.vehicle===item.id){const j=a.journey;j.vehicle=null;j.speed=100;j.amount=Math.min(16,j.amount);if(['outbound','return'].includes(j.phase)){const target=j.phase==='return'?(s._context?.civ||s.world?.settlements[0]):j.target;j.remaining=j.total=Math.max(1,Math.ceil(Math.hypot(target.x-j.position.x,target.y-j.position.y)/100));}}
    }
   }
