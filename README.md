@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.12.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.13.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
@@ -169,3 +169,11 @@ Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan ja
 Batas: tiga planet, delapan peradaban, 256 warga hidup per peradaban termasuk kru, 128 fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Maksimal 2.048 rekaman alat per peradaban. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Jarak perjalanan memakai garis lurus, belum memakai pathfinding atau orbit fisik. Perang deposit menghitung pasukan yang sudah tiba di front, dengan model kendali wilayah sederhana.
 
 Pengujian meliputi keputusan/keahlian, ekonomi dan bukti praktik, sihir, perang, demografi, perpindahan nyata, kru/koloni, migrasi, UI, backend serta kontrak Gemini dengan respons tiruan. Gemini dengan kunci sungguhan dan penampilan visual browser belum diuji di lingkungan ini.
+
+## Menu per pemerintahan, daerah dan permukiman (0.13)
+
+Kategori Penduduk, Gudang & peralatan, Pembangunan, Penelitian & zaman, Pekerjaan, Pemerintahan & bahasa, Prioritas, Pembelajaran, Catatan dan Grafik pangan menggunakan urutan **kategori → pemerintahan → daerah administratif → permukiman**. Semua tingkat dapat dibuka atau ditutup. Panel yang ditutup tetap tertutup ketika waktu simulasi berjalan; pilihan di peta membuka jalur permukiman yang dituju.
+
+Daerah otomatis mengikuti empat kuadran geografis planet: Barat Laut, Timur Laut, Barat Daya dan Tenggara, dengan batas x=1.600 dan y=1.000. Daerah hanya mengelompokkan permukiman dalam pemerintahan dan planet yang sama. Desa/koloni baru mengikuti lokasi dan pemerintahannya; persatuan pemerintahan memperbarui hierarki. Pengelompokan tampilan ini tidak memindahkan warga, barang atau mengubah isi simpanan.
+
+Penduduk, stok gudang/tanah, jenis peralatan, bangunan dan penelitian ditampilkan dalam tabel tiap permukiman. Detail warga selalu menunjuk permukiman asalnya, termasuk ketika nomor warga sama di desa berbeda. Prioritas dapat diubah langsung pada permukiman terkait. Pemberitahuan bangunan selesai dihapus dari popup; penyelesaian tetap tercatat dalam jurnal.
