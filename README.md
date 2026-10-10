@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.9.0**. Dua planet dimulai dengan masing-masing 20 warga nyata: manusia dan alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.10.0**. Bumi Aruna dimulai dengan empat desa manusia berisi lima warga per desa; Aster tetap satu desa berisi 20 warga alien. Setiap warga memiliki profil ideologi yang unik, atribut, sifat dan model belajar sendiri. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
@@ -12,7 +12,7 @@ Ada **40 penemuan dalam 10 cabang**, dengan prasyarat lintas cabang. Sihir memak
 
 Setiap fasilitas menampung dua peneliti per hari. Maksimal enam proyek dapat aktif bersamaan. Bahan dibayar sekali saat proyek dimulai; tidak ada progres jika tidak dikerjakan. Kecepatan per peneliti dibagi `1 + 0,15 × (jumlah proyek aktif − 1)`, sehingga paralelisme membagi tenaga dan menambah biaya koordinasi. Proyek dapat berhenti sementara karena peneliti sedang makan, istirahat atau bepergian.
 
-Sebanyak 108 deposit tersebar di tiga planet. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
+Dunia baru memiliki 36 deposit: 12 per planet, berisi 100–300 unit per deposit. Sumber pangan dan kayu dasar berada dekat desa, sedangkan sebagian batu serta bijih perlu dicari lebih jauh. Pangan liar dan hutan pulih perlahan dalam kapasitasnya; batu dan bijih tidak tumbuh kembali. Warga harus berangkat, mengambil stok, lalu pulang. Hasil baru masuk persediaan setelah tiba; kepemilikan pribadi tetap mengikuti sifat/pemerintahan. Pengumpulan tidak bisa melebihi stok deposit. Peleburan kini membutuhkan bijih dan bahan bakar.
 
 Kereta, kendaraan bermotor dan kendaraan biotik membutuhkan penemuan, fasilitas, bahan dan perakitan. Kendaraan dipakai satu perjalanan pada satu waktu, mempercepat jarak tempuh, meningkatkan muatan dan aus. Kendaraan bermotor membayar lima bahan bakar per keberangkatan. Bekal diambil saat berangkat dan sisanya dikembalikan setelah pulang. Senjata juga dibuat dengan bahan, dipakai satu penjaga per hari dan aus.
 
@@ -20,11 +20,19 @@ Kelangkaan mendorong eksplorasi. Deposit milik pemerintahan lain membutuhkan hub
 
 Tombol **Batas**, **Bahasa**, **Deposit** tersedia langsung pada layar dunia. Batas mengikuti petak yang dimiliki peradaban/polity; label menampilkan jenis serta kekuatan pemerintahan. Lapisan bahasa menampilkan nama dan tahap bahasanya. Deposit yang sudah ditemukan dapat diketuk untuk melihat stok, sifat terbarukan dan pemilik. Posisi warga/perjalanan terlihat di peta.
 
-Simpanan versi 1–7 dimigrasikan ke versi 8 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan awal 20 warga per planet, pilih Dunia baru setelah mengunduh cadangan bila diperlukan.
+Simpanan versi 1–7 dimigrasikan ke versi 8 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan empat desa manusia dan sebaran deposit yang baru, pilih Dunia baru setelah mengunduh cadangan bila diperlukan. Simpanan lama mempertahankan desa dan depositnya.
+
+## Empat desa dan tabel penduduk (0.10)
+
+Lembah Asal, Lembah Timur, Lembah Seberang dan Lembah Selatan merupakan empat permukiman mandiri di Bumi Aruna. Dua puluh pendiri dibagi tanpa menggandakan orang, bekal atau ideologi. Masing-masing desa menyimpan stok, kebutuhan bangunan, bahasa dan pemerintahan sendiri. Kaum Aster tetap berisi 20 warga. Lima desa awal ikut bergiliran dalam simulasi dunia.
+
+Daftar penduduk memakai tabel **Nama, Sedang apa, Pekerjaan, Umur, Info**. Tombol **Detail** membuka kondisi kesehatan, energi, mood, rumah, sakit, sifat, kemampuan dan slot equipment warga yang dipilih. Detail ditutup saat memilih desa lain; pembelajaran individu tetap dapat dibuka dari detail.
+
+Desa dan deposit yang sudah ada pada simpanan lama dipertahankan. Pengurangan deposit, stok awal dan pembagian desa hanya diterapkan pada dunia baru; versi format simpanan tetap 8.
 
 ## Awal tanpa bangunan, rumah dan gudang (0.9)
 
-Dua permukiman awal masing-masing berisi 20 warga dengan **10 porsi pangan total**: setengah porsi per warga, tanpa kayu, batu, alat, rumah, ladang maupun gudang. Warga mengumpulkan bahan dan membangun sendiri. Tanpa bekal cukup, perjalanan pengumpulan tetap boleh dimulai dengan bekal yang tersedia; perjalanan pasukan tetap membutuhkan logistik penuh. Stok tidak pernah dibuat gratis untuk menolong warga.
+Empat desa manusia dimulai dengan lima warga dan **2,5 porsi pangan per desa**, total 10 porsi. Kaum Aster tetap 20 warga dengan 10 porsi pangan: setengah porsi per warga, tanpa kayu, batu, alat, rumah, ladang maupun gudang. Warga mengumpulkan bahan dan membangun sendiri. Tanpa bekal cukup, perjalanan pengumpulan tetap boleh dimulai dengan bekal yang tersedia; perjalanan pasukan tetap membutuhkan logistik penuh. Stok tidak pernah dibuat gratis untuk menolong warga.
 
 Rumah menampung tiga warga, habitat empat; tidak ada tiga tempat tinggal gratis. Setiap warga mendapatkan rumah dan tempat tidur tertentu saat tersedia. Tempat kru tetap dipesan selama mereka pergi. Warga tanpa rumah atau sedang bepergian tidur di luar: istirahat memulihkan 18 energi dibanding 27 di rumah; suasana hati menurun lebih cepat, pemulihan kesehatan lebih rendah dan peluang sakit lebih tinggi. Warga yang kesal lebih mudah berselisih. Kondisi rumah, sakit dan suasana hati terlihat di kartu warga.
 
@@ -126,7 +134,7 @@ Untuk Gemini, salin `.env.example` ke `.env` dan isi sendiri. Jangan commit kunc
 | `MAX_PROMPTS_PER_HOUR` | Opsional; default 20, rentang 1–100 |
 | `PORT` | Default 8000; disediakan hosting |
 
-Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.9 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
+Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.10 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
 
 ## Simpanan dan batas model
 
