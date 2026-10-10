@@ -1,3 +1,4 @@
+import {createNotices} from './notifications.js';
 import {buildingCost,known} from './economy.js';
 import {stateOf,stageName,DISCOVERIES,discoveryStatus} from './world.js';
 import {camera,drawWorld,pan,zoom,focus,hit} from './map.js';
@@ -5,13 +6,14 @@ import {localDraft,describeEffect,OBJECT_LABELS,validateDescriptor} from './worl
 import {DAY_MS,OFFLINE_CAP,newGame,population,capacity,era,tick,advance,observation,available,epsilon,row,startProject,BUILDINGS,LABELS,POLICIES,validateSave,log,TRAITS,efficiency,expertise,traitBonus,buildingNeeds,applyObject,goal,needBonus} from './engine.js';
 const $=id=>document.getElementById(id),KEY='peradaban-save-v1',fmt=n=>Math.floor(n).toLocaleString('id-ID');
 let state,focusId=1,pendingTarget=1,selected=null,speed=1,previous=Date.now(),saveAt=0,renderAt=0,storageFailed=false,blockedRestore=false,previousHidden=document.hidden;
-const view=camera();
+const view=camera(),worldNotices=createNotices();
+let menuOrigin=null,noticeUntil=0;
 function currentRoot(){return state;}
 function focused(){return state.world.settlements.find(c=>c.id===focusId)||state.world.settlements[0];}
 function viewState(){return stateOf(state,focused());}
 function selectCivilization(id,center=true){focusId=Number(id);selected=null;if(center)focus(view,focused());render();}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
-function notice(text){$('notice').textContent=text;$('notice').hidden=false;}
+function notice(text){$('notice').textContent=text;$('notice').hidden=false;noticeUntil=Date.now()+8000;}
 function error(text){$('error').textContent=text;$('error').hidden=!text;}
 function storageMessage(){return storageFailed?'Gagal menyimpan di browser. Unduh cadangan.':'Tersimpan otomatis di browser ini';}
 function persist(now=Date.now()){
@@ -37,7 +39,7 @@ function showBuildings(){
 function showAgents(){
  const state=viewState();
  $('agents').replaceChildren();const agents=$('agent-filter').value==='all'?state.agents:population(state);
- for(const a of agents){const c=el('div',undefined,'agent'),head=el('header'),text=el('div');text.append(el('strong',a.name),el('small',`${a.age} tahun${a.alive?'':' · arsip'}`));head.append(el('div',a.name.charAt(0),'portrait'),text);c.append(head,el('div',a.alive?(a.away?'Sedang ekspedisi':(a.age<16?'Tumbuh · ':'')+LABELS[a.action]):a.exitReason==='emigration'?'Pindah permukiman':'Kehidupan selesai','action'));const bars=el('div',undefined,'bars');for(const [label,value]of [['Kesehatan',a.health],['Energi',a.energy]]){const b=el('div');b.append(el('label',`${label} ${Math.round(value)}%`),meter(value));bars.append(b);}c.append(el('small',a.traits.map(k=>TRAITS[k].name).join(' · '),'trait-tags'));const skilled=Object.entries(a.skills).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);c.append(el('small',skilled.map(([k,v])=>`${LABELS[k]}: ${expertise(a,k)} (${Math.floor(v)})`).join(' · ')));c.append(el('small',`Reputasi ${Math.round(a.reputation)} · Pribadi: ${fmt(a.stash.food)} pangan, ${fmt(a.stash.wood)} kayu, ${fmt(a.stash.stone)} batu`));c.append(el('small','Alat: '+(Object.values(a.equipment).map(id=>state.tools.find(t=>t.id===id)?.name).filter(Boolean).join(' / ')||'belum ada')));c.append(bars,el('div',`Kepekaan sihir ${a.arcaneSensitivity} · ${fmt(a.steps)} pengalaman · lapar ${Math.round(a.hunger)}%`,'metrics'));const b=el('button','Lihat pembelajaran →');b.onclick=()=>{selected=a.id;$('inspect').value=String(a.id);showModel();$('model').scrollIntoView({behavior:'smooth',block:'center'});};c.append(b);$('agents').append(c);}
+ for(const a of agents){const c=el('div',undefined,'agent'),head=el('header'),text=el('div');text.append(el('strong',a.name),el('small',`${a.age} tahun${a.alive?'':' · arsip'}`));head.append(el('div',a.name.charAt(0),'portrait'),text);c.append(head,el('div',a.alive?(a.away?'Sedang ekspedisi':(a.age<16?'Tumbuh · ':'')+LABELS[a.action]):a.exitReason==='emigration'?'Pindah permukiman':'Kehidupan selesai','action'));const bars=el('div',undefined,'bars');for(const [label,value]of [['Kesehatan',a.health],['Energi',a.energy]]){const b=el('div');b.append(el('label',`${label} ${Math.round(value)}%`),meter(value));bars.append(b);}c.append(el('small',a.traits.map(k=>TRAITS[k].name).join(' · '),'trait-tags'));const skilled=Object.entries(a.skills).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);c.append(el('small',skilled.map(([k,v])=>`${LABELS[k]}: ${expertise(a,k)} (${Math.floor(v)})`).join(' · ')));c.append(el('small',`Reputasi ${Math.round(a.reputation)} · Pribadi: ${fmt(a.stash.food)} pangan, ${fmt(a.stash.wood)} kayu, ${fmt(a.stash.stone)} batu`));c.append(el('small','Alat: '+(Object.values(a.equipment).map(id=>state.tools.find(t=>t.id===id)?.name).filter(Boolean).join(' / ')||'belum ada')));c.append(bars,el('div',`Kepekaan sihir ${a.arcaneSensitivity} · ${fmt(a.steps)} pengalaman · lapar ${Math.round(a.hunger)}%`,'metrics'));const b=el('button','Lihat pembelajaran →');b.onclick=()=>{selected=a.id;$('inspect').value=String(a.id);showModel();openMenu('learning');$('model').scrollIntoView({behavior:'smooth',block:'center'});};c.append(b);$('agents').append(c);}
  if(!agents.length)$('agents').append(el('p','Tidak ada penduduk aktif. Kamu dapat memulai dunia baru atau mengimpor simpanan.'));
 }
 function showModel(){
@@ -53,9 +55,10 @@ function showObjects(){
  const state=viewState();
  $('world-objects').replaceChildren(...state.objects.map(o=>{const d=el('div',undefined,'world-object');d.append(el('strong',o.descriptor.name),el('small',OBJECT_LABELS[o.kind]+' · '+(o.kind==='event'?o.remaining+' hari tersisa':o.kind==='building'?'Bangunan aktif':'Cadangan '+Math.floor(o.stock))),el('small',describeEffect(o.descriptor)));return d;}));
 }
-function drawMap(time){drawWorld(state,view,$('world'),focusId,time);}
+function drawMap(time){const canvas=$('world'),rect=canvas.getBoundingClientRect();const width=Math.max(1,Math.round(rect.width)),height=Math.max(1,Math.round(rect.height));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}drawWorld(state,view,$('world'),focusId,time);}
 function drawChart(){const state=viewState();const c=$('chart'),ctx=c.getContext('2d'),data=state.history;ctx.clearRect(0,0,c.width,c.height);const max=Math.max(30,...data.map(h=>h.food));ctx.strokeStyle='#2e4035';for(let i=0;i<4;i++){const y=20+i*45;ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(590,y);ctx.stroke();}ctx.font='12px system-ui';ctx.fillStyle='#9aae9b';if(data.length<2){ctx.fillText('Grafik tersedia setelah 20 hari.',15,100);return;}ctx.beginPath();data.forEach((h,i)=>{const x=12+i/(data.length-1)*575,y=170-h.food/max*145;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.strokeStyle='#afd29b';ctx.lineWidth=3;ctx.stroke();$('chart-caption').textContent=`Hari ${fmt(data[0].day)}–${fmt(data.at(-1).day)} · rentang 0–${fmt(max)} makanan`;}
 function render(){
+ worldNotices.collect(currentRoot());if($('menu-drawer').hidden)showNotification();if(Date.now()>=noticeUntil)$('notice').hidden=true;
  const root=currentRoot();const state=viewState();showCivilizations(root);
  const active=population(state),all=state.agents,steps=all.reduce((n,a)=>n+a.steps,0);
  $('era').textContent=focused().name+' · '+stageName(focused());$('date').textContent=`Tahun ${Math.floor(root.day/60)+1} · Hari ${root.day%60+1}`;
@@ -81,8 +84,8 @@ $('speed').onchange=()=>{catchUp();speed=Number($('speed').value);};
 $('policy').onchange=()=>{catchUp();const target=viewState();target.policy=$('policy').value;log(target,'Prioritas berubah: '+POLICIES[target.policy]+'.');persist();render();};
 $('agent-filter').onchange=showAgents;$('inspect').onchange=()=>{selected=Number($('inspect').value);showModel();};
 $('export').onclick=()=>{let content;if(blockedRestore){try{content=localStorage.getItem(KEY);}catch{}}if(!content){persist();content=JSON.stringify(state,null,2);}const url=URL.createObjectURL(new Blob([content],{type:'application/json'})),a=el('a');a.href=url;a.download='peradaban-hari-'+state.day+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import-button').onclick=()=>$('import').click();$('import').onchange=async()=>{const f=$('import').files[0];try{if(!f)return;if(f.size>16*1024*1024)throw Error('File terlalu besar (maksimal 16 MB).');const candidate=validateSave(JSON.parse(await f.text()));if(!confirm('Ganti dunia saat ini dengan simpanan ini? Unduh cadangan dulu jika ingin menyimpan dunia lama.'))return;state=candidate;focusId=1;focus(view,focused());state.lastSaved=Date.now();previous=Date.now();selected=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();render();notice('Simpanan dan model belajar berhasil diimpor. Waktu di dalam file dipulihkan tanpa menambah waktu berlalu.');}catch(e){error(e.message||'File tidak valid.');}finally{$('import').value='';}};
-$('new').onclick=()=>{if(!confirm('Mulai dunia baru? Unduh simpanan terlebih dahulu jika ingin mempertahankan dunia ini.'))return;state=newGame();focusId=1;focus(view,focused());previous=Date.now();selected=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();$('notice').hidden=true;render();};
+$('import-button').onclick=()=>$('import').click();$('import').onchange=async()=>{const f=$('import').files[0];try{if(!f)return;if(f.size>16*1024*1024)throw Error('File terlalu besar (maksimal 16 MB).');const candidate=validateSave(JSON.parse(await f.text()));if(!confirm('Ganti dunia saat ini dengan simpanan ini? Unduh cadangan dulu jika ingin menyimpan dunia lama.'))return;state=candidate;worldNotices.reset(state);closeMenu();focusId=1;focus(view,focused());state.lastSaved=Date.now();previous=Date.now();selected=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();render();notice('Simpanan dan model belajar berhasil diimpor. Waktu di dalam file dipulihkan tanpa menambah waktu berlalu.');}catch(e){error(e.message||'File tidak valid.');}finally{$('import').value='';}};
+$('new').onclick=()=>{if(!confirm('Mulai dunia baru? Unduh simpanan terlebih dahulu jika ingin mempertahankan dunia ini.'))return;state=newGame();worldNotices.reset(state);closeMenu();focusId=1;focus(view,focused());previous=Date.now();selected=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();$('notice').hidden=true;render();};
 let promptMode='local',pendingObject=null,promptBusy=false;
 async function initPrompt(){
  try{const r=await fetch('/api/config');if(!r.ok)throw Error('static');const c=await r.json();promptMode=c.enabled?c.mode:'disabled';$('llm-status').textContent=c.message;$('token-field').hidden=!c.authRequired;$('draft-button').disabled=!c.enabled;}
@@ -102,7 +105,7 @@ initPrompt();
 // Page hide saves the exact current state, while reload recovers elapsed time.
 window.addEventListener('pagehide',()=>{if(!blockedRestore){catchUp();persist();}});
 document.addEventListener('visibilitychange',()=>{catchUp();if(!blockedRestore)persist();render();});
-load();initMap();render();
+load();worldNotices.reset(state);initMenus();initMap();focus(view,focused());render();
 setInterval(()=>{if(blockedRestore)return;const now=Date.now();catchUp(now);if(now-renderAt>=800&&!document.hidden){render();renderAt=now;}if(now-saveAt>=5000)persist(now);},250);
 function animate(time){if(!document.hidden)drawMap(time);requestAnimationFrame(animate);}requestAnimationFrame(animate);
 
@@ -143,3 +146,34 @@ function initMap(){
 function resourceName(key){return {food:'pangan',wood:'kayu',stone:'batu',fiber:'serat',bone:'tulang',metal:'logam',fuel:'bahan bakar',alloy:'paduan',energy:'energi',mana:'mana'}[key]||key;}
 function showFlow(){const s=viewState(),g=goal(s);$('flow-goal').textContent=g.reason;$('flows').replaceChildren();const jobs=new Map();for(const r of s.lastTurn?.records||[]){const job=jobs.get(r.action)||{count:0,inputs:{},outputs:{},targets:[]};job.count++;for(const [k,n]of Object.entries(r.inputs))job.inputs[k]=(job.inputs[k]||0)+n;for(const [k,n]of Object.entries(r.outputs))job.outputs[k]=(job.outputs[k]||0)+n;if(r.target)job.targets.push(r.target);jobs.set(r.action,job);}const amounts=o=>Object.entries(o).map(([k,n])=>n.toFixed(1)+' '+resourceName(k)).join(', ');
  for(const [key,job]of jobs){const item=el('div',undefined,'world-object');item.append(el('strong',`${job.count} warga · ${LABELS[key]}`));if(Object.keys(job.inputs).length)item.append(el('small','Dipakai: '+amounts(job.inputs)));if(Object.keys(job.outputs).length)item.append(el('small','Dihasilkan: '+amounts(job.outputs)));if(job.targets.length)item.append(el('small','Tujuan: '+[...new Set(job.targets)].join(', ')));$('flows').append(item);}for(const a of s.lastTurn?.allocations||[])$('flows').append(el('small','Dialokasikan untuk '+a.purpose+': '+amounts(a.inputs)));if(!jobs.size)$('flows').append(el('p','Rincian muncul setelah warga menjalankan satu hari kegiatan.'));}
+
+function openMenu(panel=null,origin=null){
+ menuOrigin=origin||menuOrigin||document.activeElement;
+ $('menu-drawer').hidden=false;$('menu-backdrop').hidden=false;$('world-workspace').inert=true;
+ for(const id of ['menu-toggle','explore-toggle','intervention-toggle','journal-toggle'])$(id).setAttribute('aria-expanded','true');
+ if(panel){const target=$('panel-'+panel);for(const id of ['navigation','resources','people','policy','flow','buildings','development','tools','learning','journal','trends','prompt','saves'])$('panel-'+id).open=id===panel;target.scrollIntoView({block:'start'});}
+ $('menu-close').focus();
+}
+function closeMenu(){
+ $('menu-drawer').hidden=true;$('menu-backdrop').hidden=true;$('world-workspace').inert=false;
+ for(const id of ['menu-toggle','explore-toggle','intervention-toggle','journal-toggle'])$(id).setAttribute('aria-expanded','false');
+ menuOrigin?.focus?.();menuOrigin=null;
+}
+function showNotification(){
+ const item=worldNotices.show(Date.now());$('world-notifications').hidden=!item;if(!item)return;
+ const node=$('world-notifications');if(node.dataset.noticeId===String(item.id))return;node.dataset.noticeId=String(item.id);node.dataset.kind=item.kind;
+ $('notification-kind').textContent=item.kind==='achievement'?'Pencapaian':item.kind==='alert'?'Perhatian':'Peristiwa';
+ $('notification-title').textContent=item.title;$('notification-text').textContent=item.text;
+ $('notification-meta').textContent=item.name+' · Hari '+item.day+' · Ketuk untuk catatan';
+}
+function initMenus(){
+ closeMenu();
+ $('menu-toggle').onclick=()=>openMenu(null,$('menu-toggle'));
+ $('explore-toggle').onclick=()=>openMenu('navigation',$('explore-toggle'));
+ $('intervention-toggle').onclick=()=>openMenu('prompt',$('intervention-toggle'));
+ $('journal-toggle').onclick=()=>openMenu('journal',$('journal-toggle'));
+ $('menu-close').onclick=closeMenu;$('menu-backdrop').onclick=closeMenu;
+ $('notification-dismiss').onclick=()=>{worldNotices.dismiss();showNotification();};
+ $('notification-open').onclick=()=>{const item=worldNotices.show(Date.now());if(item)selectCivilization(item.civId);openMenu('journal',$('journal-toggle'));worldNotices.dismiss();$('world-notifications').hidden=true;};
+ document.addEventListener('keydown',event=>{if($('menu-drawer').hidden)return;if(event.key==='Escape'){event.preventDefault();closeMenu();}else if(event.key==='Tab'){const nodes=[...$('menu-drawer').querySelectorAll('button,select,input,textarea,summary,a[href]')].filter(n=>!n.disabled&&n.getClientRects().length);if(!nodes.length)return;const first=nodes[0],last=nodes.at(-1);if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
+}

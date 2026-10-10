@@ -1,8 +1,14 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.5.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.6.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
+
+## Tampilan utama untuk HP
+
+Dunia memenuhi layar. Kontrol jeda/kecepatan berada di atas, zoom/fokus di sisi peta, dan empat tombol di bawah: Menu, Jelajah, Intervensi, Catatan. Semua detail berada pada menu accordion yang tertutup saat pertama dibuka. Di HP menu muncul dari bawah; desktop menggunakan panel samping. Tombol tutup, area di luar panel, atau Escape mengembalikan peta. Kontrol sentuh mempunyai area tekan minimal 44 piksel.
+
+Event penting, bangunan selesai, penemuan, sihir, kontak, perpecahan, perang, perjalanan dan koloni ditampilkan sebagai kartu di atas dunia. Ketuk kartu untuk melihat catatan peradaban terkait; tutup dengan × atau tunggu 10 detik. Antrean dibatasi 12 notifikasi terbaru, ditampilkan satu per satu. Log aktivitas rutin tidak memunculkan popup. Riwayat saat membuka/mengimpor simpanan tidak diputar ulang, dan event yang terjadi ketika menu terbuka menunggu tampilan dunia.
 
 ## Siklus simulasi
 
