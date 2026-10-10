@@ -1,5 +1,5 @@
 export const OBJECT_KINDS=['river','forest','quarry','ruins','building','event','resource','magic'];
-export const BUILDING_KEYS=['none','hut','farm','school','well'];
+export const BUILDING_KEYS=['none','hut','farm','school','well','furnace','workshop','generator','observatory','shipyard','habitat'];
 export const EVENT_KEYS=['none','drought','flood','festival','disease','war','rebellion','contact','awakening','custom'];
 export const OBJECT_LABELS={river:'Sungai',forest:'Hutan',quarry:'Tambang batu',ruins:'Reruntuhan',building:'Bangunan',event:'Peristiwa',resource:'Resource khusus',magic:'Sumber sihir'};
 export const OBJECT_SCHEMA={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:OBJECT_KINDS},name:{type:'string'},description:{type:'string'},x:{type:'number'},y:{type:'number'},richness:{type:'integer'},intensity:{type:'integer'},duration:{type:'integer'},building:{type:'string',enum:BUILDING_KEYS},event:{type:'string',enum:EVENT_KEYS},amount:{type:'integer'}},required:['kind','name','description','x','y','richness','intensity','duration','building','event','amount']};
@@ -19,8 +19,8 @@ export function validateDescriptor(value){
  d.name=d.name.trim();return d;
 }
 export function describeEffect(d){
- if(d.kind==='resource')return `Cadangan ${d.richness*100} ${d.name}; kategori ${d.category}; kekerasan ${d.hardness}, kekuatan ${d.strength}. Saat dipakai: energi ${d.energy}, sihir ${d.arcane}, penelitian ${d.research}, penyembuhan ${d.healing}, toksisitas ${d.toxicity}. ${d.renewable?'Terbarukan.':'Bisa habis.'}`;
- if(d.kind==='magic')return 'Sumber tersembunyi: perlu warga peka ≥75, keahlian penelitian ≥20, pengetahuan ≥40, serta pengamatan dekat sumber.';
+ if(d.kind==='resource')return `Cadangan ${d.richness*100} ${d.name}; kekerasan ${d.hardness} memengaruhi pengumpulan. Pemanfaatan dipilih sesuai kebutuhan: mineral perlu tungku/bahan bakar (kekuatan ${d.strength}); bahan bakar dapat diproses; energi ${d.energy} perlu pembangkit; mana ${d.arcane} perlu sihir dikuasai; riset ${d.research} perlu pekerjaan pemanfaatan; penyembuhan ${d.healing} ditujukan kepada pasien. Toksisitas ${d.toxicity} mengenai pengumpul/pengguna, bukan seluruh desa. ${d.renewable?'Terbarukan.':'Bisa habis.'}`;
+ if(d.kind==='magic')return 'Sumber tersembunyi: perlu warga peka ≥75, keahlian penelitian ≥20, pengetahuan ≥40, serta tindakan mempelajari sihir dekat sumber. Mana dikumpulkan dan dipakai melalui tindakan terpisah.';
  if(d.kind==='event'&&['war','rebellion','contact','awakening','custom'].includes(d.event))return `Pemicu ${d.trigger}; ${d.duration} hari. `+({war:'Ketegangan dengan peradaban lain di planet yang sama; perang masih membutuhkan warga dan logistik.',rebellion:'Menurunkan keharmonisan dan meningkatkan keluhan; pemisahan membutuhkan kelompok serta bekal.',contact:'Memperkuat pencarian sinyal; kontak membutuhkan astronomi dan radio kedua pihak.',awakening:'Mempercepat pengamatan sihir; tidak melewati syarat kepekaan dan penelitian.',custom:`Efek ${d.effect}: ${d.magnitude*.2} per hari.`}[d.event]);
  if(d.kind==='river')return `Memancing dibuka, cadangan awal ${d.richness*80} ikan; risiko banjir tahunan ${d.intensity*6}%.`;
  if(d.kind==='forest'||d.kind==='quarry')return `Cadangan ${d.richness*80} ${d.kind==='forest'?'kayu':'batu'} meningkatkan hasil kerja sampai habis.`;
@@ -31,7 +31,7 @@ export function describeEffect(d){
 
 export function localDraft(prompt){
  const text=prompt.toLowerCase();let kind,building='none',event='none',name;
- if(/sihir|mana|magic/.test(text)){kind='magic';name='Mata air mana';}
+ if(/sihir|\bmana\b|magic/.test(text)&&!/resource|sumber daya|kristal/.test(text)){kind='magic';name='Mata air mana';}
  else if(/perang|war|pemberontakan|perpecahan|alien|kontak/.test(text)){kind='event';event=/perang|war/.test(text)?'war':/pemberontakan|perpecahan/.test(text)?'rebellion':'contact';name='Pemicu '+event;}
  else if(/resource|sumber daya|kristal|uranium|besi|minyak/.test(text)){kind='resource';name=/uranium/.test(text)?'Uranium':/besi/.test(text)?'Besi':/minyak/.test(text)?'Minyak':'Kristal baru';}
  else if(/sungai|river|ikan|memancing/.test(text)){kind='river';name='Sungai kehidupan';}

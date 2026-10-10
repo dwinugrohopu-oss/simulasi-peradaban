@@ -1,169 +1,89 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.4.0**. Enam perintis memulai permukiman, sementara peradaban alien sudah hidup di planet lain. Warga memilih kegiatan, mempelajari pekerjaan, membangun sesuai kebutuhan, dan membentuk generasi berikutnya. Pemain dapat mengamati sepenuhnya atau mengubah prioritas dan memasukkan objek melalui prompt.
+Prototype **0.5.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
-## Warga, sifat, dan keahlian
+Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
-Setiap warga memiliki dua sifat dasar:
+## Siklus simulasi
 
-| Sifat | Dampak |
+**Kebutuhan → pilihan pekerjaan → penggunaan bahan → hasil → kebutuhan berikutnya.** Semua peradaban memakai kalender yang sama. Setiap warga yang hidup dan berada di desa mendapat satu tindakan per hari; kru ekspedisi tidak bekerja di desa. Proyek baru, riset dan wahana membayar bahan sekali. Tidak ada panen, peleburan, listrik atau mana otomatis dari warga yang beristirahat.
+
+| Sistem | Hubungannya dengan sistem lain |
 |---|---|
-| Rajin | Cenderung bekerja fisik/membangun, produksi +18% di bidang terkait, konsumsi energi -10% |
-| Penasaran | Cenderung meneliti, penelitian +25%, eksplorasi +35% |
-| Supel | Cenderung bersosialisasi, hasil sosial +15%, eksplorasi +10% |
-| Hemat | Cenderung mencari pangan, hasil terkait +10%, makan memakai 0,8 makanan, eksplorasi -15% |
-| Pemberani | Cenderung menebang, menambang, memancing; hasil terkait +18%, eksplorasi +20% |
-| Hati-hati | Cenderung membangun, bertani, meneliti; hasil terkait +12%, konsumsi energi -15%, eksplorasi -30% |
+| Pangan | Foraging, memancing dan petani menghasilkan pangan; ladang membutuhkan petani, maksimal tiga pekerja per ladang sehari. Pertanian meningkatkan hasil. Pangan untuk makan, kelahiran, penjagaan dan bekal ekspedisi. Surplus di atas kapasitas penyimpanan berangsur rusak. |
+| Rumah dan kesehatan | Rumah menyediakan tiga tempat; habitat menyediakan empat. Tempat kru tetap dihitung agar tidak terisi kelahiran saat mereka pergi. Sumur membantu pemulihan; kesehatan rendah mengurangi efisiensi pekerjaan. |
+| Alat | Warga merancang dan menguji prototipe dengan bahan nyata. Dua alat berhasil membuka bukti metalurgi; pemakaian alat dan peleburan membuka bukti mesin. Alat diberikan kepada pekerja yang membutuhkan, aus dan dapat rusak. Logam serta paduan menjadi pilihan material setelah ditemukan. |
+| Industri | Tungku + metalurgi: kayu → bahan bakar; batu + bahan bakar → logam. Bengkel + mesin: logam + bahan bakar → paduan. Pembangkit + listrik: bahan bakar → energi. Setiap tahap perlu operator. |
+| Penelitian | Pengetahuan, keahlian, penemuan terdahulu, bukti praktik dan bahan harus cukup. Peneliti memenuhi pekerjaan riset bertahap; bahan dibayar saat riset dimulai. Balai belajar mempercepat penelitian dan memungkinkan mengajar generasi berikutnya. |
+| Sihir | Warga berbakat dengan kepekaan ≥75, penelitian ≥20 dan pengetahuan desa ≥40 mempelajari sumber dekat desa sampai pengamatan 60. Setelah ditemukan, warga mengumpulkan mana, menyembuhkan seorang pasien atau membantu proyek dengan tindakan terpisah. Warga lain bisa berlatih lewat sumber/mentor. |
+| Masyarakat | Sifat, persediaan pribadi, reputasi, hubungan dan ingatan memengaruhi berbagi, pencurian, manipulasi, intimidasi, dendam dan kerja sama. Kelompok yang mempunyai keluhan bersama dapat memisahkan diri sambil membawa bekal, pengalaman, alat dan ingatan. |
+| Perang | Hubungan buruk, kedekatan wilayah, warga dan logistik memungkinkan perang. Penjaga memakai hari kerja, pangan dan energi; pertempuran melukai warga serta memengaruhi produktivitas dan suasana. Kedua pihak menyelesaikan giliran sebelum pertempuran. |
+| Perpindahan | Pendatang berasal dari peradaban lain yang benar-benar ada. Warga, bekal, alat dan kemampuan berpindah; mereka tidak dibuat atau dihapus begitu saja. Tidak ada tujuan yang cocok berarti warga tetap tinggal. |
+| Antariksa | Observasi radio memakai energi dan observatorium. Wahana membutuhkan bahan, galangan, perakitan dan kru nyata. Survei menempuh 40 hari pergi dan 40 hari pulang, memakai ransum serta mencatat planet yang dikunjungi. Koloni memindahkan kru dan kargo; habitat dibangun dengan bahan kargo. |
 
-Efek dua sifat dapat bergabung. Sifat menambahkan kecenderungan +1,2 per sifat pada skor pemilihan tindakan yang cocok, bukan mengunci karier. Pengetahuan dari pengalaman tetap memengaruhi keputusan.
+Kelahiran diperiksa tiap tahun jika ada dua orang dewasa usia 18–45, tempat, pangan dan keharmonisan cukup. Anak mempunyai kegiatan ringan sampai usia 16. Kematian terjadi akibat kesehatan atau peluang usia lanjut. Koloni memilih calon orang tua dan menyisakan calon orang tua di desa asal. Tidak semua permukiman akan bertahan; perkembangan dipengaruhi sifat, pekerjaan, konflik dan kondisi generasi berikutnya.
 
-Setiap pekerjaan yang dilakukan menambah satu poin keahlian di bidang itu. Tingkat keahlian: **Pemula**, **Terlatih** (20), **Terampil** (60), **Ahli** (150). Efisiensi dasar `1 + min(1.5, pengalaman/150)`; bonus sifat diterapkan setelahnya. Ini sistem latihan terpisah dari tabel Q yang belajar memilih tindakan.
+## Self-learning dan sifat
 
-## Pembangunan dan populasi otomatis
+Setiap warga memiliki dua dari 12 sifat: rajin, penasaran, supel, hemat, pemberani, hati-hati, egois, serakah, pendendam, agresif, kejam dan manipulatif. Sifat memberi kecenderungan pekerjaan dan dapat mengubah efisiensi, penggunaan energi atau eksplorasi. Setiap tindakan meningkatkan keahlian terkait. Tingkatan: Pemula, Terlatih (20), Terampil (60), Ahli (150).
 
-Tidak perlu merencanakan proyek manual. Warga memilih kebutuhan paling mendesak: pangan → ladang, kapasitas rumah → rumah, kesehatan → sumur, kemajuan ilmu → balai belajar. Urutan sebenarnya ditentukan skor kebutuhan; proyek menunggu bahan tersedia, membayar bahan sekali, lalu dikerjakan lewat tindakan warga. Aturan penentuan proyek adalah heuristik kebutuhan; pilihan kegiatan individu menggunakan Q-learning.
-
-Rumah memberi kapasitas +3, ladang menghasilkan pangan pasif dan membuka bertani, sumur membantu pemulihan, balai belajar menaikkan hasil penelitian serta laju pembelajaran. Maksimal 8 bangunan per jenis dan 16 warga aktif.
-
-- **Kelahiran:** diperiksa tiap tahun bila ada warga dewasa 18–45 tahun, pangan, keharmonisan, dan tempat tinggal cukup.
-- **Anak:** tumbuh dari usia 0; hanya mencari pangan ringan, bermain/sosial, makan, istirahat sampai usia 16. Hasil kerja ringan 45% dari skala biasa.
-- **Pendatang:** dapat hadir tiap 90 hari jika kondisi permukiman mendukung.
-- **Pindah:** warga dewasa dapat pergi ketika pangan atau keharmonisan sangat buruk.
-- **Kematian:** kesehatan habis atau peluang usia lanjut. Kematian dan perpindahan dicatat terpisah.
-
-## Model self-learning
-
-**Tabular Q-learning lokal**. Tiap warga memiliki tabel Q, pengalaman, eksplorasi, dan keahlian sendiri. Penduduk baru tidak langsung mewarisi model warga lain.
-
-State terdiri dari lapar, energi rendah, kelangkaan pangan, proyek aktif, keharmonisan rendah, dan prioritas masyarakat. Tindakan tersedia: mencari makanan, menebang, menambang, bertani, membangun, meneliti, makan, istirahat, bersosialisasi, memancing bila ada sungai.
+Model keputusan adalah **tabular Q-learning lokal**, dibantu aturan kebutuhan dan pengaman bertahan hidup. State mencakup lapar, energi rendah, pangan langka, proyek, keharmonisan, kebutuhan masyarakat saat ini dan prioritas pemain. Pilihan menggunakan Q + kecenderungan sifat + urgensi kebutuhan; eksplorasi tetap memungkinkan tindakan lain. Warga tidak merupakan agen LLM.
 
 ```text
 Q(s,a) ← Q(s,a) + α [reward + 0.75 × max Q(s',a') − Q(s,a)]
-α = 0.16, atau 0.22 bila ada balai belajar
-Pilihan = argmax(Q + kecenderungan sifat), kecuali eksplorasi
+α = 0.16; dengan balai belajar 0.22
 ```
 
-Eksplorasi turun bertahap menuju 5%; sifat mengubah tingkat awalnya. Reward mengikuti hasil kerja, kebutuhan pribadi, kelangkaan, kebutuhan sosial, proyek, dan prioritas. Pengaman makan saat sangat lapar dan istirahat saat energi habis adalah aturan langsung, bukan hasil belajar. LLM tidak mengendalikan tiap keputusan warga; penggunaannya hanya untuk menerjemahkan prompt dunia.
+Aturan kolektif memilih kebutuhan/proyek; Q-learning mempelajari keputusan individu. Ini bukan klaim bahwa warga menemukan aturan fisika atau teknologi baru tanpa batas.
 
-## Prompt → rancangan → objek nyata
+## Perkembangan zaman
 
-Panel **Intervensi dunia** membuat satu rancangan, menampilkan dampaknya, lalu tombol **Masukkan ke dunia** menerapkan perubahan sekali. Keluaran divalidasi; tidak ada kode LLM yang dieksekusi.
+Urutan riset: pertanian → metalurgi → mesin → astronomi → listrik → elektronika → roket → penunjang kehidupan → penerbangan antariksa → habitat planet. Syarat rinci dan pekerjaan riset ditampilkan pada panel penemuan. Zaman mengikuti penemuan yang benar-benar selesai, bukan angka pengetahuan saja.
 
-| Jenis | Efek simulasi |
-|---|---|
-| Sungai | Memancing, stok ikan pulih, peluang banjir tiap tahun |
-| Hutan | Tambahan hasil menebang hingga stok habis |
-| Tambang batu | Tambahan hasil menambang hingga stok habis |
-| Reruntuhan | Tambahan hasil penelitian hingga stok habis |
-| Bangunan | Hadiah 1–3 rumah, ladang, balai belajar, atau sumur tanpa biaya bahan |
-| Peristiwa | Kekeringan menekan panen, banjir mengurangi pangan, festival menaikkan suasana/keharmonisan, wabah mengurangi kesehatan |
+Panel **Kebutuhan → pekerjaan → hasil** menunjukkan sasaran desa, pekerjaan hari terakhir, bahan masuk/keluar, penerima manfaat serta alokasi proyek. Pilih permukiman untuk melihat ekonomi dan penduduknya. Geser peta, gunakan roda mouse, dua jari atau ± untuk zoom. Tampilan tata surya memperlihatkan planet dan perjalanan. Pengamat dapat melihat alien sejak awal; peradaban harus mencapai kontak sendiri.
 
-Contoh: **“Munculkan sungai di timur desa, banyak ikan tetapi bisa meluap.”** Warga mendapat tindakan memancing dan belajar nilainya lewat pengalaman. Posisi objek muncul pada peta dan tujuan animasi kegiatan; belum ada pathfinding atau biaya perjalanan berdasarkan jarak.
+## Intervensi dunia dan Gemini
 
-Objek dibatasi 24, kekayaan 1–10, intensitas 1–5, durasi peristiwa 10–180 hari. Event selesai dihapus dari daftar aktif. Semua mekanik berada dalam jenis yang didukung; permintaan mekanik yang benar-benar baru perlu pengembangan kode.
+Prompt → pratinjau → **Masukkan ke dunia**. Satu prompt menghasilkan satu deskripsi yang divalidasi. Tidak ada kode hasil LLM yang dieksekusi. Pratinjau tetap terikat kepada peradaban asal meskipun pemain beralih tampilan.
 
-### Dua mode prompt
+Objek didukung: sungai, hutan, tambang, reruntuhan, hadiah bangunan, sumber sihir, sumber daya bernama bebas, dan peristiwa dengan pemicu. Peristiwa dapat memengaruhi pangan, kesehatan, keharmonisan, penelitian, energi atau mana; perang/pemberontakan/kontak memengaruhi kondisi pemicu sistem tersebut. Hadiah bangunan dan efek peristiwa merupakan intervensi pemain yang eksplisit, berbeda dari produksi kerja biasa.
 
-- **Mode lokal:** tanpa API. Pencocokan kata kunci untuk sungai, hutan, tambang batu, reruntuhan, rumah, ladang, balai belajar, sumur, kemarau, banjir, festival, wabah. Timur/barat/utara/selatan dikenali, parameter lain memakai default. UI secara jelas menandainya sebagai mode lokal, bukan LLM.
-- **Mode LLM:** server memanggil Gemini API (`generateContent`) dengan Structured Outputs. Kunci API hanya ada di server. Dibutuhkan kode akses pemilik sebelum permintaan berbayar; batas default 20 permintaan/jam/server. Satu prompt membuat satu objek. Respons tidak lengkap, refusal, nilai di luar batas, dan kesalahan layanan ditolak.
+Sumber daya baru mempunyai stok dan sifat seperti kekerasan, kekuatan, energi, penelitian, penyembuhan, sihir serta toksisitas. Warga **mengumpulkan lalu memprosesnya menjadi satu hasil yang sedang diperlukan**. Logam/listrik/sihir tetap membutuhkan fasilitas dan pengetahuan terkait. Racun memengaruhi pengumpul atau pengguna/pasien, bukan otomatis seluruh desa. Resource tidak memberikan semua bonus sekaligus.
 
-Dokumentasi implementasi: https://ai.google.dev/gemini-api/docs/structured-output
+Mode lokal memakai kata kunci tanpa API. Mode Gemini memanggil `generateContent` dengan keluaran terstruktur melalui server. LLM menerjemahkan prompt menjadi parameter mekanik yang tersedia; permintaan aturan baru tetap memerlukan perubahan kode.
 
-## Menjalankan lokal
+## Menjalankan
 
-Node.js 20+; tanpa dependency npm:
+Node.js 20+, tanpa dependency npm:
 
 ```bash
 npm start
-```
-
-Buka `http://localhost:8000`. Tanpa env, server memakai mode lokal. Untuk LLM, isi env sebelum menjalankan `node server.js`, atau gunakan Node yang mendukung:
-
-```bash
-node --env-file=.env server.js
-```
-
-Salin `.env.example` menjadi `.env` dan isi sendiri; jangan commit kunci. Kunci dibuat di https://aistudio.google.com/apikey; gunakan kunci Gemini API milik pemilik deployment dari Google AI Studio.
-
-```bash
 npm test
 npm run build
 ```
 
-Build menyalin sembilan file frontend ke `dist/`. Static Site tetap dapat menjalankan seluruh simulasi dan prompt lokal. Membuka `index.html` melalui `file://` tidak didukung karena JavaScript modules.
+Buka `http://localhost:8000`. Tanpa env, prompt memakai mode lokal. Build menyediakan frontend di `dist/` untuk hosting statis; mode Gemini membutuhkan Web Service. Jangan membuka modul langsung melalui `file://`.
 
-## Render: Web Service untuk LLM
+Untuk Gemini, salin `.env.example` ke `.env` dan isi sendiri. Jangan commit kunci. Server tidak membaca `.env` secara otomatis; injeksikan env atau gunakan Node yang mendukung `node --env-file=.env server.js`.
 
-Buat **Web Service**, runtime **Node**, dari repo ini. Pengaturan:
-
-| Pengaturan | Nilai |
+| Env | Fungsi |
 |---|---|
-| Branch | `main` |
-| Root Directory | Kosong |
-| Build Command | `npm install` |
-| Start Command | `npm start` |
+| `GEMINI_API_KEY` | Kunci di server, bukan di panel game |
+| `WORLD_TOKEN` | Kode akses pemilik yang dimasukkan pada panel prompt; wajib bila API aktif |
+| `GEMINI_MODEL` | Opsional; default kode saat ini `gemini-3.5-flash-lite` |
+| `MAX_PROMPTS_PER_HOUR` | Opsional; default 20, rentang 1–100 |
+| `PORT` | Default 8000; disediakan hosting |
 
-Env:
+Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.5 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
 
-| Env | Isi |
-|---|---|
-| `GEMINI_API_KEY` | Kunci Gemini API pribadi; hanya di server |
-| `WORLD_TOKEN` | Kode akses panjang yang kamu pilih; masukkan pada panel prompt game |
-| `GEMINI_MODEL` | Opsional; default `gemini-3.5-flash-lite`, dapat diganti model Gemini yang mendukung keluaran terstruktur |
-| `MAX_PROMPTS_PER_HOUR` | Opsional; default `20`, rentang 1–100 |
+## Simpanan dan batas model
 
-`PORT` disediakan hosting. Jika `GEMINI_API_KEY` diisi tetapi `WORLD_TOKEN` kosong, endpoint LLM dinonaktifkan. Jangan memasukkan kunci API ke panel game. Endpoint tidak menyimpan token di localStorage atau file simpanan. Gemini memiliki Free Tier dengan kuota yang bergantung pada model/proyek (lihat https://ai.google.dev/gemini-api/docs/pricing dan https://ai.google.dev/gemini-api/docs/rate-limits). Kuota akun diperiksa di AI Studio; paket berbayar dapat dikenai biaya. Model 2.5 dibatasi bagi pengguna lama, sehingga default untuk proyek baru memakai 3.5 Flash-Lite. API LLM memakai layanan eksternal; game tanpa LLM tidak mengirim prompt ke Google Gemini.
+Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Static Site versi sebelumnya tidak dapat menjalankan backend ini. **Ekspor simpanan sebelum berpindah URL** ke Web Service, lalu impor pada URL baru. Deployment Web Service: https://render.com/docs/deploy-node-express-app
+Save versi 1–4 dimigrasikan ke versi 5, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi lama yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
-## Progres dan migrasi
+Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis.
 
-Progres tetap di browser (autosave 5 detik), termasuk sifat, skill, tabel Q, penduduk, bangunan, dan objek dunia. Ekspor/impor JSON untuk cadangan atau pindah perangkat/domain. Tidak perlu database atau disk Render untuk progres pemain; belum ada sinkronisasi cloud.
+Batas: tiga planet, delapan peradaban, 16 warga hidup per peradaban termasuk kru, delapan fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Peta belum memakai pathfinding, medan tempur spasial atau orbit fisik.
 
-Simpanan versi 0.1 dimigrasikan otomatis tanpa menghapus sumber daya, umur, model lama, proyek, atau waktu simpan. Warga lama mendapat dua sifat deterministik; tabel Q lama dipindahkan ke state dengan keharmonisan cukup, aksi memancing dimulai dengan nilai nol. Cadangan versi lama tetap dapat diimpor.
-
-Satu hari = 4 detik; 60 hari = satu tahun. Saat kembali, game menghitung maksimal 8 jam waktu berlalu pada kecepatan normal. Simulasi tidak berjalan di server saat tab tertutup. Dunia dijeda tidak maju; warga tetap dapat meninggal selama perhitungan waktu berlalu. Menghapus data situs atau berpindah origin memutus akses simpanan lokal. Arsip maksimal 100 warga terbaru; warga aktif selalu dipertahankan. Simpanan rusak tidak ditimpa otomatis.
-
-## Pengujian
-
-52 pengujian mencakup Q-learning, sifat/efisiensi, pembangunan otonom, populasi, skill, efek objek, migrasi versi lama, waktu berlalu, storage gagal, ekspor/impor, preview/apply, endpoint backend, autentikasi, rate limit, serta kontrak Gemini API dengan respons tiruan. Panggilan LLM sungguhan memerlukan kunci API dan belum diuji dalam lingkungan pengembangan ini. Smoke test UI memakai DOM minimal; verifikasi visual di browser belum dilakukan.
-
-### Memperbarui deployment OpenAI lama
-
-Di Render, ganti env `OPENAI_API_KEY` menjadi `GEMINI_API_KEY`, dan `OPENAI_MODEL` menjadi `GEMINI_MODEL=gemini-3.5-flash-lite`. Hapus env OpenAI lama. Pertahankan `WORLD_TOKEN`. Deploy commit terbaru; Build Command tetap `npm install`, Start Command tetap `npm start`. Penggantian provider tidak mengubah format simpanan atau URL layanan yang sudah ada.
-
-## Versi 0.3: masyarakat dan penemuan
-Warga dapat bersifat egois, serakah, pendendam, agresif, kejam atau manipulatif. Persediaan pribadi, reputasi dan ingatan hubungan memengaruhi berbagi, pencurian, intimidasi, balas dendam serta kerja sama. Konflik mempunyai jeda 10 hari; anak tidak menjadi sasaran.
-
-Penelitian menghabiskan bahan untuk prototipe lalu menguji pada tindakan penelitian berikutnya. Kayu, batu, tulang, serat, bentuk mata dan sambungan menentukan massa, daya tahan, potensi hasil dan risiko. Warga mencatat kegagalan, mengubah komponen dan meniru rancangan berhasil. Alat dipakai otomatis untuk kayu, batu dan ladang; aus dan perlu diganti. Ini fisika sederhana dalam satuan game, bukan mesin fisika 3D atau penemuan objek tanpa batas. Gemini tetap hanya untuk rancangan intervensi dunia.
-
-Simpanan versi 1, 2, dan 3 dimigrasikan ke versi 4 tanpa menghapus progres atau bobot Q lama. Render tetap memakai `npm start`; tidak ada variabel lingkungan baru.
-
-## Versi 0.4: dunia luas, sihir, alien dan antariksa
-
-Pilih peradaban pada daftar atau ketuk permukiman. Geser peta dengan mouse/jari, zoom dengan roda mouse, dua jari atau tombol ±. Tampilan **Tata surya** memperlihatkan tiga planet dan ekspedisi; ketuk planet untuk melihat permukaannya. Semua peradaban terlihat bagi pengamat sejak awal, tetapi penduduk baru mengenal pihak lain setelah pertemuan atau komunikasi. Panel penduduk, persediaan, prioritas, penelitian dan prompt mengikuti peradaban yang dipilih. Pratinjau prompt tetap terikat pada tujuan awal meskipun pemain berpindah tampilan.
-
-Setiap peradaban mempunyai simulasi warga dan ekonomi sendiri. Perpecahan membutuhkan keharmonisan rendah, sedikitnya dua warga yang bermasalah, keluhan berkelanjutan, enam orang dewasa serta bekal. Warga pindah membawa pengalaman dan alat; 25% bekal bersama ikut dipindahkan. Konflik antarperadaban berkembang dari kelangkaan, warga agresif dan hubungan buruk, lalu membutuhkan logistik untuk menjadi perang. Perang menghabiskan makanan, kesehatan dan suasana hati sebelum gencatan senjata; tidak ditentukan undian peristiwa.
-
-Sumber mana ada sejak awal. Warga dengan kepekaan ≥75, latihan penelitian ≥20 dan pengetahuan desa ≥40 harus meneliti dekat sumber hingga pengamatan 60. Setelah dipahami, mana membantu pemulihan kesehatan serta pembangunan. Kepekaan ditentukan dari seed/identitas warga; penemuan tidak muncul dari undian tahunan. Alien hidup dan meneliti secara mandiri sejak awal; kontak radio membutuhkan astronomi, elektronika dan pengamatan kedua pihak.
-
-| Penemuan | Prasyarat utama |
-|---|---|
-| Pertanian | Ladang, pengetahuan 15, penelitian 8 |
-| Peleburan logam | Pertanian, dua uji alat, pengetahuan 70, penelitian 20 |
-| Mesin | Logam, alat dipakai 10 kali, pengetahuan 160, penelitian 35 |
-| Astronomi | Mesin, balai belajar, pengetahuan 220, penelitian 60 |
-| Listrik | Mesin, pengetahuan 300, penelitian 70 |
-| Elektronika/radio | Listrik, pengetahuan 500, penelitian 100 |
-| Roket | Elektronika, astronomi, pengetahuan 850, penelitian 150 |
-| Penunjang kehidupan | Roket, pengetahuan 1000, penelitian 170 |
-| Penerbangan antariksa | Penunjang kehidupan, pengetahuan 1200, penelitian 200 |
-| Koloni planet | Antariksa, pengetahuan 1500, penelitian 240 |
-
-Semua penemuan juga membutuhkan dan menghabiskan bahan. Metalurgi mengubah batu/kayu menjadi logam dan bahan bakar; mesin menghasilkan paduan; pembangkit menghabiskan bahan bakar untuk energi. Penelitian nyata menyiapkan ekspedisi, yang menghabiskan paduan/bahan bakar/energi dan menempuh perjalanan 40 hari. Habitat, bekal dan warga yang cukup memungkinkan koloni. Jalur tersebut dapat tercapai melalui tindakan otonom tanpa prompt pemain.
-
-Prompt mendukung **resource baru bernama bebas** dengan sifat kekerasan, kekuatan, energi, sihir, bantuan penelitian, penyembuhan dan toksisitas. Warga mengumpulkan lalu menggunakannya; stok bisa habis atau pulih jika terbarukan. Ada kategori mineral, bahan bakar, pangan, obat, arcane dan energi. Contoh: “Tambahkan kristal aether yang menyimpan energi, membantu penelitian tetapi beracun.”
-
-Peristiwa baru dapat menggunakan pemicu langsung, keharmonisan rendah, zaman listrik atau sihir dikuasai. Selain perang, pemberontakan, sinyal kontak dan pengamatan sihir, event bernama bebas bisa menaikkan/menurunkan pangan, kesehatan, keharmonisan, penelitian, energi atau mana. Prompt tidak menulis aturan atau kode baru; efek selalu dibatasi koefisien yang didukung dan dijelaskan pada pratinjau. Mode lokal mengenali kata kunci tambahan perang, perpecahan/pemberontakan, alien/kontak, sihir/mana, resource/kristal/besi/minyak/uranium.
-
-Batas prototipe: 8 peradaban, 3 planet, 16 warga aktif per peradaban, 16 resource khusus per peradaban, 24 sumber mana dan 24 peristiwa dunia. Simulasi sosial, industri, fisika dan antariksa memakai model sederhana; belum ada pathfinding, orbit fisik, diplomasi chatbot, atau mekanik tak terbatas yang dibuat LLM. Semua progres dunia ikut disimpan dan diekspor. File impor maksimal 16 MB. Migrasi simpanan versi 3 mempertahankan alat, model Q, umur dan persediaan; populasi alien serta sumber mana ditambahkan saat migrasi. Tidak perlu env Render baru.
+Pengujian meliputi keputusan/keahlian, ekonomi dan bukti praktik, sihir, perang, demografi, perpindahan nyata, kru/koloni, migrasi, UI, backend serta kontrak Gemini dengan respons tiruan. Gemini dengan kunci sungguhan dan penampilan visual browser belum diuji di lingkungan ini.
