@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.2**. Enam perintis memulai permukiman. Warga memilih kegiatan, mempelajari pekerjaan, membangun sesuai kebutuhan, dan membentuk generasi berikutnya. Pemain dapat mengamati sepenuhnya atau mengubah prioritas dan memasukkan objek melalui prompt.
+Prototype **0.2.1**. Enam perintis memulai permukiman. Warga memilih kegiatan, mempelajari pekerjaan, membangun sesuai kebutuhan, dan membentuk generasi berikutnya. Pemain dapat mengamati sepenuhnya atau mengubah prioritas dan memasukkan objek melalui prompt.
 
 ## Warga, sifat, dan keahlian
 
@@ -65,9 +65,9 @@ Objek dibatasi 24, kekayaan 1–10, intensitas 1–5, durasi peristiwa 10–180 
 ### Dua mode prompt
 
 - **Mode lokal:** tanpa API. Pencocokan kata kunci untuk sungai, hutan, tambang batu, reruntuhan, rumah, ladang, balai belajar, sumur, kemarau, banjir, festival, wabah. Timur/barat/utara/selatan dikenali, parameter lain memakai default. UI secara jelas menandainya sebagai mode lokal, bukan LLM.
-- **Mode LLM:** server memanggil OpenAI Responses API dengan Structured Outputs. Kunci API hanya ada di server. Dibutuhkan kode akses pemilik sebelum permintaan berbayar; batas default 20 permintaan/jam/server. Satu prompt membuat satu objek. Respons tidak lengkap, refusal, nilai di luar batas, dan kesalahan layanan ditolak.
+- **Mode LLM:** server memanggil Gemini API (`generateContent`) dengan Structured Outputs. Kunci API hanya ada di server. Dibutuhkan kode akses pemilik sebelum permintaan berbayar; batas default 20 permintaan/jam/server. Satu prompt membuat satu objek. Respons tidak lengkap, refusal, nilai di luar batas, dan kesalahan layanan ditolak.
 
-Dokumentasi implementasi: https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses
+Dokumentasi implementasi: https://ai.google.dev/gemini-api/docs/structured-output
 
 ## Menjalankan lokal
 
@@ -83,7 +83,7 @@ Buka `http://localhost:8000`. Tanpa env, server memakai mode lokal. Untuk LLM, i
 node --env-file=.env server.js
 ```
 
-Salin `.env.example` menjadi `.env` dan isi sendiri; jangan commit kunci. Keanggotaan ChatGPT dan akun API merupakan konfigurasi terpisah; gunakan kunci API milik pemilik deployment.
+Salin `.env.example` menjadi `.env` dan isi sendiri; jangan commit kunci. Kunci dibuat di https://aistudio.google.com/apikey; gunakan kunci Gemini API milik pemilik deployment dari Google AI Studio.
 
 ```bash
 npm test
@@ -107,12 +107,12 @@ Env:
 
 | Env | Isi |
 |---|---|
-| `OPENAI_API_KEY` | Kunci API OpenAI pribadi; hanya di server |
+| `GEMINI_API_KEY` | Kunci Gemini API pribadi; hanya di server |
 | `WORLD_TOKEN` | Kode akses panjang yang kamu pilih; masukkan pada panel prompt game |
-| `OPENAI_MODEL` | Opsional; default `gpt-4o-mini`, dapat diganti model yang mendukung Responses dan Structured Outputs |
+| `GEMINI_MODEL` | Opsional; default `gemini-3.5-flash-lite`, dapat diganti model Gemini yang mendukung keluaran terstruktur |
 | `MAX_PROMPTS_PER_HOUR` | Opsional; default `20`, rentang 1–100 |
 
-`PORT` disediakan hosting. Jika `OPENAI_API_KEY` diisi tetapi `WORLD_TOKEN` kosong, endpoint LLM dinonaktifkan. Jangan memasukkan kunci API ke panel game. Endpoint tidak menyimpan token di localStorage atau file simpanan. API LLM memakai layanan eksternal dengan pemakaian API; game tanpa LLM tidak mengirim prompt ke OpenAI.
+`PORT` disediakan hosting. Jika `GEMINI_API_KEY` diisi tetapi `WORLD_TOKEN` kosong, endpoint LLM dinonaktifkan. Jangan memasukkan kunci API ke panel game. Endpoint tidak menyimpan token di localStorage atau file simpanan. Gemini memiliki Free Tier dengan kuota yang bergantung pada model/proyek (lihat https://ai.google.dev/gemini-api/docs/pricing dan https://ai.google.dev/gemini-api/docs/rate-limits). Kuota akun diperiksa di AI Studio; paket berbayar dapat dikenai biaya. Model 2.5 dibatasi bagi pengguna lama, sehingga default untuk proyek baru memakai 3.5 Flash-Lite. API LLM memakai layanan eksternal; game tanpa LLM tidak mengirim prompt ke Google Gemini.
 
 Static Site versi sebelumnya tidak dapat menjalankan backend ini. **Ekspor simpanan sebelum berpindah URL** ke Web Service, lalu impor pada URL baru. Deployment Web Service: https://render.com/docs/deploy-node-express-app
 
@@ -126,4 +126,8 @@ Satu hari = 4 detik; 60 hari = satu tahun. Saat kembali, game menghitung maksima
 
 ## Pengujian
 
-27 pengujian mencakup Q-learning, sifat/efisiensi, pembangunan otonom, populasi, skill, efek objek, migrasi versi lama, waktu berlalu, storage gagal, ekspor/impor, preview/apply, endpoint backend, autentikasi, rate limit, serta kontrak Responses API dengan respons tiruan. Panggilan LLM sungguhan memerlukan kunci API dan belum diuji dalam lingkungan pengembangan ini. Smoke test UI memakai DOM minimal; verifikasi visual di browser belum dilakukan.
+30 pengujian mencakup Q-learning, sifat/efisiensi, pembangunan otonom, populasi, skill, efek objek, migrasi versi lama, waktu berlalu, storage gagal, ekspor/impor, preview/apply, endpoint backend, autentikasi, rate limit, serta kontrak Gemini API dengan respons tiruan. Panggilan LLM sungguhan memerlukan kunci API dan belum diuji dalam lingkungan pengembangan ini. Smoke test UI memakai DOM minimal; verifikasi visual di browser belum dilakukan.
+
+### Memperbarui deployment OpenAI lama
+
+Di Render, ganti env `OPENAI_API_KEY` menjadi `GEMINI_API_KEY`, dan `OPENAI_MODEL` menjadi `GEMINI_MODEL=gemini-3.5-flash-lite`. Hapus env OpenAI lama. Pertahankan `WORLD_TOKEN`. Deploy commit terbaru; Build Command tetap `npm install`, Start Command tetap `npm start`. Penggantian provider tidak mengubah format simpanan atau URL layanan yang sudah ada.
