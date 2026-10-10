@@ -23,7 +23,7 @@ test('negative actions respect age, personal capacity and conflict cooldown',()=
  const s=newGame(7,0),a=s.agents[0];a.traits=['aggressive','greedy'];assert.ok(available(s,a).includes('intimidate'));act(s,a,'intimidate');assert.ok(!available(s,a).includes('intimidate'));a.stash.food=30;assert.ok(!available(s,a).includes('steal'));a.age=4;assert.ok(!available(s,a).includes('steal'));assert.ok(!available(s,a).includes('intimidate'));
 });
 test('version two migration preserves state and Q values while malformed tools reject',()=>{
- const s=newGame(9,0);act(s,s.agents[0],'wood');s.version=2;s.agents[0].q={'0:0:0:0:0:balanced':Object.fromEntries(Object.keys(s.agents[0].skills).slice(0,10).map(k=>[k,7]))};const restored=validateSave(s);assert.equal(restored.version,5);assert.equal(restored.wood,s.wood);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].wood,7);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].steal,0);
+ const s=newGame(9,0);act(s,s.agents[0],'wood');s.version=2;s.agents[0].q={'0:0:0:0:0:balanced':Object.fromEntries(Object.keys(s.agents[0].skills).slice(0,10).map(k=>[k,7]))};const restored=validateSave(s);assert.equal(restored.version,6);assert.equal(restored.wood,s.wood);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].wood,7);assert.equal(restored.agents[0].q['0:0:0:0:0:balanced'].steal,0);
  const bad=newGame(2,0);bad.agents[0].stash.food=31;assert.throws(()=>validateSave(bad));bad.agents[0].stash.food=0;bad.agents[0].equipment.wood=999;assert.throws(()=>validateSave(bad));
 });
 test('autonomous research yields tested, used tools rather than only knowledge',()=>{

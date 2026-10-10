@@ -32,3 +32,17 @@ Permintaan audit: mekanik terasa tidak saling terhubung. Pemeriksaan menemukan m
 Ini masih model permainan: pembangunan kolektif memakai heuristik dan pilihan individu memakai Q-learning. Perkembangan teknologi memakai jalur yang telah didefinisikan. Alat mempunyai fisika relatif, bukan simulasi rekayasa; map belum menentukan jarak perjalanan warga. Gemini menambah objek/peristiwa berparameter, bukan aturan bebas. Dunia dapat gagal berkembang atau kehilangan sebuah permukiman karena kondisi populasi.
 
 Verifikasi visual di browser dan panggilan Gemini dengan API key sungguhan belum dilakukan. Pembaruan tidak mengubah env Render dan tidak menyediakan sinkronisasi cloud.
+
+## Pembaruan 0.7 — alat, demografi dan budaya
+
+Alat lama sebelumnya disalin sebagai resep dan hanya diganti saat aus. Sekarang bahan, sambungan dan penggerak mengikuti penemuan; bahan/energi harus diperoleh dan dibayar. Alat terpakai dibedakan dari arsip. Peta menggambar setiap fasilitas, termasuk ladang.
+
+Atribut individu memengaruhi hasil kerja. Pemerintahan mengikuti kebiasaan yang berkelanjutan, wilayah menghitung warga nyata, dan keluarga bahasa berasal dari planet asal serta berkembang melalui aktivitas. Penerjemahan/diplomasi memperbaiki pemahaman; salah paham memengaruhi hubungan dan memakai syarat perang yang sama.
+
+Simulasi seed 1 selama 4.500 hari lolos validasi: 291 warga hidup = 12 warga awal + 291 kelahiran − 12 kematian; delapan permukiman, wilayah Negara, dan alat aktif di desa awal memakai paduan serta penggerak listrik. Ini contoh jalur satu seed, bukan jaminan semua masyarakat bertahan atau mencapai zaman yang sama. Pengujian visual browser/HP dan Gemini dengan kunci sungguhan belum dilakukan.
+
+Optimasi pencarian alat dan penemuan mempertahankan hasil serta Q yang persis sama pada perbandingan seed 1 dan 42 selama 1.500 hari. Uji offline seed 44 selama 7.200 hari menghasilkan 1.175 warga dan lolos validasi; menghitung seluruh waktu offline masih berat untuk dunia besar. Batas/fraction waktu diuji langsung pada penjadwal, sedangkan simulasi demografi lintas seed tetap diuji terpisah.
+
+Cakupan regresi demografi: seed 1 selama 7.200 hari dan enam seed lain selama 2.500 hari; uji terpisah seed 44 juga mencapai 7.200 hari. Cakupan tahun penuh tetap dipisahkan dari unit penjadwalan waktu offline agar perubahan ukuran penduduk tidak membuat tes batas waktu menjalankan dua simulasi besar yang identik.
+
+Verifikasi akhir: 83 tes lulus tanpa kegagalan atau skip; build frontend berhasil. UI memakai pengujian DOM tiruan, bukan verifikasi visual browser/HP.

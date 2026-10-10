@@ -1,3 +1,5 @@
+import {BUILDINGS} from './rules.js';
+import {territory} from './civics.js';
 import {population} from './engine.js';
 import {stateOf,stageName} from './world.js';
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
@@ -22,10 +24,16 @@ export function drawWorld(root,c,canvas,selected,time){
  for(const source of root.world.sources.filter(o=>o.planet===c.planet)){circle(source.x,source.y,30,'#8273b7');label(source.x+35,source.y,'Sumber mana','#c0a8e4',10);}
  const civs=root.world.settlements.filter(o=>o.planet===c.planet);
  for(const civ of civs){const s=stateOf(root,civ);for(const id of civ.contacts){const other=civs.find(o=>o.id===id);if(!other||civ.id>id)continue;const war=civ.war?.against===id;line(civ.x,civ.y,other.x,other.y,war?'#dd8271':(civ.relations[id]||0)<0?'#947265':'#6b9879',!war);}
-  circle(civ.x,civ.y,115,civ.id===selected?'#375b3d':civ.species==='alien'?'#493a60':'#2c4736');circle(civ.x,civ.y,30,civ.species==='alien'?'#c2a0e1':'#e1bc75');label(civ.x-95,civ.y-135,civ.name,civ.id===selected?'#f6e4b7':'#deead7');label(civ.x-95,civ.y-100,stageName(civ)+' · '+population(s).length+' warga','#b6c5af',10);
+  circle(civ.x,civ.y,115,civ.id===selected?'#375b3d':civ.species==='alien'?'#493a60':'#2c4736');circle(civ.x,civ.y,30,civ.species==='alien'?'#c2a0e1':'#e1bc75');label(civ.x-95,civ.y-135,civ.name,civ.id===selected?'#f6e4b7':'#deead7');label(civ.x-95,civ.y-100,territory(root,civ).form+' · '+stageName(civ)+' · '+population(s).length+' warga','#b6c5af',10);
   if(civ.war)label(civ.x-95,civ.y+155,'PERANG','#ed9f8d',11);else if(civ.magic)label(civ.x-95,civ.y+155,'Sihir dipahami','#c5a8ed',10);
-  if(c.zoom>.45){for(let i=0;i<s.buildings.hut;i++){const p=point(civ.x-90+(i%4)*43,civ.y-55+Math.floor(i/4)*34);ctx.fillStyle='#a68b65';ctx.fillRect(p.x,p.y,27*c.zoom,20*c.zoom);}if(s.buildings.farm){const p=point(civ.x-100,civ.y+55);ctx.fillStyle='#849b53';ctx.fillRect(p.x,p.y,110*c.zoom,35*c.zoom);}if(s.buildings.school)circle(civ.x+60,civ.y+50,18,'#9eacbd');
-   for(const [key,x,y,color]of [['furnace',120,-60,'#c48462'],['workshop',140,0,'#9aa5af'],['generator',100,100,'#e1c46e'],['observatory',0,-100,'#a7a6d4'],['shipyard',-130,50,'#8fb9c7'],['habitat',-60,0,'#85bbbf']])if(s.buildings[key]){circle(civ.x+x,civ.y+y,16,color);if(c.zoom>1)label(civ.x+x+20,civ.y+y,key,color,9);}
+  const nodes=buildingNodes(s,civ);const countKinds=Object.entries(s.buildings).filter(([key,count])=>count>0);
+  if(c.zoom>.3){for(const node of nodes){const p=point(node.x,node.y),z=c.zoom;
+   if(node.kind==='farm'){ctx.fillStyle='#b6a75f';ctx.fillRect(p.x-10*z,p.y-8*z,20*z,16*z);for(let row=0;row<3;row++){ctx.fillStyle='#4f6b35';ctx.fillRect(p.x-8*z,p.y+(-5+row*5)*z,16*z,2*z);}}
+   else if(node.kind==='hut'||node.kind==='habitat'){ctx.fillStyle=node.kind==='habitat'?'#96c9d0':civ.stage>=4?'#c3c5b1':'#bf9c70';ctx.fillRect(p.x-8*z,p.y-5*z,16*z,14*z);ctx.fillStyle='#705d49';ctx.beginPath();ctx.moveTo(p.x-11*z,p.y-5*z);ctx.lineTo(p.x,p.y-14*z);ctx.lineTo(p.x+11*z,p.y-5*z);ctx.fill();}
+   else{const colors={well:'#7dc3d7',school:'#bbc5d4',furnace:'#e69c60',workshop:'#c5b89a',generator:'#ebcf78',observatory:'#b6a2df',shipyard:'#8fd2cc'};circle(node.x,node.y,8,colors[node.kind]||'#a1b39e');}}
+  }
+  for(const [key,count]of countKinds){const node=nodes.find(n=>n.kind===key);if(node)label(node.x-15,node.y-24,BUILDINGS[key].name+' ×'+count,key==='farm'?'#e4d589':'#d2dfc7',9);}
+  if(c.zoom>.45){
    for(const a of population(s)){const phase=time/900+a.id*2.2,areas={forage:[-180,80],wood:[-160,-100],stone:[155,100],farm:[-65,90],research:[90,40],build:[60,-80],fish:[190,50],craft:[140,0],smelt:[120,-60],fuel:[120,-60],alloy:[140,0],generate:[100,100],observe:[0,-100],assembleShip:[-130,50],defend:[0,140],heal:[90,40],studyMagic:[60,40],channel:[60,40],enchantBuild:[60,-80],teach:[90,40],extract:[155,100],useResource:[140,0]},spot=areas[a.action]||[0,10];circle(civ.x+spot[0]+(a.id%4)*12+Math.sin(phase)*6,civ.y+spot[1]+Math.cos(phase)*6,5,civ.species==='alien'?'#b7a0de':'#c5dba2');}
    for(const r of s.customResources){const x=civ.x+(r.x-50)*5,y=civ.y+(r.y-50)*5;circle(x,y,12,'#e3c886');label(x+16,y,r.name,'#e3c886',9);}
    for(const o of s.objects){const x=civ.x+(o.descriptor.x-50)*5,y=civ.y+(o.descriptor.y-50)*5;circle(x,y,12,'#80b8ae');label(x+16,y,o.descriptor.name,'#a5ccc2',9);}
@@ -33,3 +41,5 @@ export function drawWorld(root,c,canvas,selected,time){
  }
  if(!civs.length)label(1200,900,'Planet belum dihuni. Koloni membutuhkan ekspedisi dan habitat.');
 }
+
+export function buildingNodes(s,civ){const bases={hut:[-90,-50],farm:[-100,75],well:[0,135],school:[65,55],furnace:[125,-60],workshop:[150,0],generator:[120,100],observatory:[0,-110],shipyard:[-140,-100],habitat:[-30,10]},nodes=[];for(const [kind,count]of Object.entries(s.buildings)){const cols=Math.ceil(Math.sqrt(Math.max(1,count))),[x,y]=bases[kind]||[0,0];for(let i=0;i<count;i++)nodes.push({kind,index:i,x:civ.x+x+(i%cols-(cols-1)/2)*24,y:civ.y+y+(Math.floor(i/cols)-(Math.ceil(count/cols)-1)/2)*23});}return nodes;}

@@ -1,6 +1,6 @@
 # Peradaban — dunia otonom dengan warga yang belajar
 
-Prototype **0.6.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
+Prototype **0.7.0**. Enam manusia memulai permukiman dan enam alien hidup mandiri di planet lain. Sumber sihir sudah ada sejak awal; warga perlu menemukan cara memakainya. Pemain mengamati dunia, memilih prioritas, atau memasukkan intervensi melalui prompt. Pembangunan berjalan otomatis sesuai kebutuhan.
 
 Versi ini menghubungkan pekerjaan dengan persediaan, fasilitas, riset, konflik dan perjalanan. Temuan audit serta cakupan verifikasi ada di [AUDIT.md](AUDIT.md).
 
@@ -48,6 +48,18 @@ Urutan riset: pertanian → metalurgi → mesin → astronomi → listrik → el
 
 Panel **Kebutuhan → pekerjaan → hasil** menunjukkan sasaran desa, pekerjaan hari terakhir, bahan masuk/keluar, penerima manfaat serta alokasi proyek. Pilih permukiman untuk melihat ekonomi dan penduduknya. Geser peta, gunakan roda mouse, dua jari atau ± untuk zoom. Tampilan tata surya memperlihatkan planet dan perjalanan. Pengamat dapat melihat alien sejak awal; peradaban harus mencapai kontak sendiri.
 
+## Warga, pemerintahan, wilayah dan bahasa
+
+Setiap warga memiliki kekuatan, kecerdasan, daya tahan, karisma, empati dan disiplin (0–100). Atribut memengaruhi pekerjaan terkait dan bertambah lewat latihan; anak mewarisi variasi atribut calon orang tua. Pertumbuhan memakai warga nyata, bukan angka populasi perwakilan. Kelahiran tahunan dapat melibatkan beberapa pasangan jika tempat dan pangan cukup.
+
+Pemerintahan muncul dari kebiasaan berbagi, menimbun, merawat, memaksa, keberagaman pekerjaan dan koordinasi yang bertahan 90 hari. Bentuknya dewan, komunis, sosialis, liberal, kapitalis, hive mind atau otokrasi. Hive mind memerlukan sihir atau elektronika. Legitimasi, kohesi, administrasi, ekonomi, militer, stabilitas dan kekuatan dihitung dari kondisi warga/fasilitas; ideologi sendiri tidak otomatis membuat negara kuat. Sistem distribusi memengaruhi bagian hasil yang disimpan pribadi, stabilitas memengaruhi kerja sama, dan militer memengaruhi pertempuran. Ini model permainan sederhana, bukan prediksi politik dunia nyata.
+
+Permukiman menjadi **Kota pada 30 warga** dan **Kota besar pada 100**. Permukiman yang makmur dapat mendirikan kota baru dengan memindahkan delapan warga nyata beserta kargo. Wilayah dalam satu pemerintahan menjadi **Negara pada 250 warga dan dua permukiman hidup**. Pada 500 warga dan tiga permukiman, otokrasi menjadi Empire, liberal menjadi Federasi, hive mind menjadi Kolektif, dan bentuk lain menjadi Union. Kontak bersahabat yang saling memahami dapat menyatukan pemerintahan. Perpecahan membentuk pemerintahan terpisah.
+
+Bahasa berasal dari keluarga bahasa planet asal: isyarat → lisan sederhana → tulis → matang. Kemajuan memerlukan aktivitas sosial, mengajar, diplomasi, riset atau penerjemahan; tulisan memerlukan sekolah dan keahlian. Koloni mewarisi bahasa asal, penduduk asli planet berbeda mempunyai kosakata berbeda. Delapan konsep dan pola pesan dibentuk secara prosedural; ini belum mesin tata bahasa lengkap. Diplomasi dan penerjemahan menggunakan hari kerja serta bahan dan meningkatkan pemahaman. Pesan dengan pemahaman rendah dapat menurunkan hubungan; perang tetap membutuhkan permusuhan, kedekatan dan logistik.
+
+Panel **Pemerintahan, wilayah & bahasa** menampilkan kondisi tersebut. Statistik individu berada di kartu warga. Peta menggambar satu simbol untuk setiap bangunan, termasuk ladang, sumur dan sekolah, dengan jumlah per jenis. Alat lama tetap terlihat sebagai arsip: alat yang sedang dipakai ditandai. Setelah metalurgi/mesin/listrik, alat sehat yang tertinggal juga diganti melalui prototipe berbayar. Penggerak listrik memakai energi setiap penggunaan; tanpa energi alat bekerja secara manual.
+
 ## Intervensi dunia dan Gemini
 
 Prompt → pratinjau → **Masukkan ke dunia**. Satu prompt menghasilkan satu deskripsi yang divalidasi. Tidak ada kode hasil LLM yang dieksekusi. Pratinjau tetap terikat kepada peradaban asal meskipun pemain beralih tampilan.
@@ -80,16 +92,16 @@ Untuk Gemini, salin `.env.example` ke `.env` dan isi sendiri. Jangan commit kunc
 | `MAX_PROMPTS_PER_HOUR` | Opsional; default 20, rentang 1–100 |
 | `PORT` | Default 8000; disediakan hosting |
 
-Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.5 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
+Render: gunakan Web Service Node dari branch `main`, Root Directory kosong, Build Command `npm install`, Start Command `npm start`. Versi 0.7 tidak menambah env. Deploy commit terbaru bila deployment belum mengikuti main. Jika berpindah URL/domain, ekspor simpanan dahulu lalu impor pada URL baru.
 
 ## Simpanan dan batas model
 
 Autosave browser tiap lima detik; ekspor/impor JSON untuk cadangan dan pindah perangkat. Semua dunia, warga, kemampuan, Q, bahan dan perjalanan ikut disimpan. Tidak ada sinkronisasi cloud atau penyimpanan progres pemain di server.
 
-Save versi 1–4 dimigrasikan ke versi 5, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi lama yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Ekspor cadangan sebelum pembaruan tetap disarankan.
+Save versi 1–5 dimigrasikan ke versi 6, mempertahankan progres dan bobot Q. Tindakan baru dimulai dari nol. Ekspedisi versi 1–4 yang tidak mempunyai kru nyata dibatalkan dengan pengembalian bahan peluncuran dan catatan penjelasan. Penerbangan versi 5 beserta kru dan kargo tetap dipertahankan. Ekspor cadangan sebelum pembaruan tetap disarankan.
 
-Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis.
+Satu hari = empat detik; 60 hari = satu tahun. Saat kembali, maksimal delapan jam dihitung pada kecepatan normal. Tab tertutup tidak menjalankan server simulasi; dunia dijeda tidak maju. Simpanan rusak tidak ditimpa otomatis. Dunia dengan ribuan warga dapat memerlukan beberapa menit untuk menghitung delapan jam offline; perhitungan ini masih berjalan pada thread utama browser.
 
-Batas: tiga planet, delapan peradaban, 16 warga hidup per peradaban termasuk kru, delapan fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Peta belum memakai pathfinding, medan tempur spasial atau orbit fisik.
+Batas: tiga planet, delapan peradaban, 256 warga hidup per peradaban termasuk kru, 128 fasilitas per jenis, 16 resource khusus per peradaban, 24 sumber sihir dan 24 event dunia. Maksimal 2.048 rekaman alat per peradaban. Arsip warga/alat dipangkas agar simpanan tidak tumbuh tanpa batas. Fisika alat memakai besaran relatif sederhana. Peta belum memakai pathfinding, medan tempur spasial atau orbit fisik.
 
 Pengujian meliputi keputusan/keahlian, ekonomi dan bukti praktik, sihir, perang, demografi, perpindahan nyata, kru/koloni, migrasi, UI, backend serta kontrak Gemini dengan respons tiruan. Gemini dengan kunci sungguhan dan penampilan visual browser belum diuji di lingkungan ini.

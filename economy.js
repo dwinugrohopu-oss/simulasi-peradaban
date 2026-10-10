@@ -1,6 +1,9 @@
-import {BUILDINGS,DISCOVERIES} from './rules.js';
+import {toolById} from './physics.js';
+import {cultureActions,cultureWork,understanding} from './civics.js';
+import {BUILDINGS,DISCOVERIES,BUILDING_LIMIT} from './rules.js';
 export const RESOURCE_KEYS=['food','wood','stone','fiber','bone','metal','fuel','energy','alloy','mana'];
-export const WORK_ACTIONS=['smelt','fuel','alloy','generate','extract','useResource','studyMagic','channel','heal','enchantBuild','observe','assembleShip','defend','teach'];
+const DISCOVERY_ORDER=Object.entries(DISCOVERIES).map(([id,d])=>({id,...d}));
+export const WORK_ACTIONS=['smelt','fuel','alloy','generate','extract','useResource','studyMagic','channel','heal','enchantBuild','observe','assembleShip','defend','teach','diplomacy','translate'];
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 export function civic(s){return s._context?.civ||s.world?.settlements.find(c=>c.id===1)||null;}
 export function rootOf(s){return s._context?.root||(s.world?s:null);}
@@ -18,9 +21,9 @@ export function buildingNeeds(s){
  const p=living(s).length,health=living(s).reduce((n,a)=>n+a.health,0)/Math.max(1,p),capacity=3+s.buildings.hut*3+s.buildings.habitat*4,c=civic(s);
  const needs=[{key:'hut',score:capacity<=p?65:capacity-p<3?30:0,reason:'Ruang tinggal hampir penuh.'},{key:'farm',score:Math.max(0,(p/4-s.buildings.farm)*20)+(s.food<p*4&&s.buildings.farm===0?50:0),reason:'Panen membutuhkan lahan dan petani.'},{key:'well',score:s.buildings.well===0&&p>=6?35:health<65&&s.buildings.well<2?20:0,reason:'Warga membutuhkan air dan pemulihan.'},{key:'school',score:s.buildings.school===0&&s.tech>=25?40:s.buildings.school<2&&s.tech>=150?10:0,reason:'Melatih peneliti dan generasi berikutnya.'}];
  for(const key of ['furnace','workshop','generator','observatory','shipyard'])needs.push({key,score:s.buildings[key]===0&&c?.discoveries.includes(BUILDINGS[key].requires)?55:0,reason:BUILDINGS[key].tip});
- return needs.map(n=>({...n,score:s.buildings[n.key]>=8?0:n.score})).sort((a,b)=>b.score-a.score);
+ return needs.map(n=>({...n,score:s.buildings[n.key]>=BUILDING_LIMIT?0:n.score})).sort((a,b)=>b.score-a.score);
 }
-export function nextDiscovery(s){const c=civic(s);return c?Object.entries(DISCOVERIES).map(([id,d])=>({id,...d})).find(d=>!c.discoveries.includes(d.id)):null;}
+export function nextDiscovery(s){const c=civic(s),d=c?DISCOVERY_ORDER.find(d=>!c.discoveries.includes(d.id)):null;return d?{...d}:d;}
 export function developmentStatus(s,id){const c=civic(s),d=DISCOVERIES[id],research=Math.max(0,...adults(s).map(a=>a.skills.research)),ongoing=c?.study?.id===id;
  const proof={agriculture:'Ladang',metallurgy:'Dua prototipe berhasil',mechanics:'Bengkel, tiga peleburan dan 10 pemakaian alat',astronomy:'Balai belajar',electricity:'Bengkel',electronics:'Pembangkit',lifeSupport:'Galangan wahana'};
  const missing=[...d.requires.filter(k=>!c?.discoveries.includes(k)).map(k=>DISCOVERIES[k].name),...(s.tech<d.tech?['Pengetahuan '+d.tech]:[]),...(research<d.skill?['Keahlian penelitian '+d.skill]:[]),...(!ongoing?Object.entries(d.cost).filter(([k,v])=>balance(s,k)<v).map(([k,v])=>k+' '+v):[]),...(d.needs&&!d.needs(s)?[proof[id]||'Bukti praktik']:[])];
@@ -36,7 +39,7 @@ function productionGoal(s,key,target){
  return {kind:key==='food'?'food':'materials',actions:key==='food'?['farm','fish','forage','useResource']:key==='fiber'||key==='bone'?['forage']:[key],reason:`${key} ${Math.floor(balance(s,key))}/${Math.ceil(target)}`};
 }
 export function goal(s){
- const c=civic(s),p=living(s),t=targets(s);if(s.food<Math.max(6,p.length*3))return {kind:'food',actions:['farm','fish','forage','useResource'],reason:'Cadangan pangan menipis'};
+ const c=civic(s),p=living(s);if(s.food<Math.max(6,p.length*3))return {kind:'food',actions:['farm','fish','forage','useResource'],reason:'Cadangan pangan menipis'};
  if(c?.war)return {kind:'war',actions:['defend'],reason:'Perang memerlukan penjaga dan logistik'};
  if(s.project)return {kind:'building',actions:['build','enchantBuild'],reason:'Menyelesaikan '+BUILDINGS[s.project.key].name};
  const building=buildingNeeds(s).find(n=>n.score>0);if(building){const cost=buildingCost(BUILDINGS[building.key]);const shortage=Object.entries(cost).find(([k,v])=>balance(s,k)<v);if(shortage)return productionGoal(s,...shortage);}
@@ -46,11 +49,13 @@ export function goal(s){
  if(d.id==='mechanics'&&s.achievements.smelt<3)return productionGoal(s,'metal',15);
  for(const [k,v]of Object.entries(d.cost))if(!c?.study&&balance(s,k)<v)return productionGoal(s,k,v);
  return {kind:'study',actions:['research','teach'],reason:'Meneliti '+d.name};}
- if(c?.magic&&balance(s,'mana')<t.mana)return {kind:'magic',actions:['channel','useResource'],reason:'Mengisi persediaan mana'};
+ if(known(s,'electricity')&&s.buildings.generator&&balance(s,'energy')<Math.max(20,p.length*.5))return productionGoal(s,'energy',Math.max(20,p.length*.5));
+ const upgrades=known(s,'metallurgy')&&s.buildings.workshop&&adults(s).some(a=>Object.values(a.equipment).some(id=>{const tool=toolById(s,id);return tool&&(!['metal','alloy'].includes(tool.design.head)||known(s,'mechanics')&&tool.design.head!=='alloy'||known(s,'electricity')&&s.buildings.generator&&tool.design.drive!=='electric');}));if(upgrades){if(s.wood<1)return productionGoal(s,'wood',2);if(known(s,'electricity')&&balance(s,'metal')<2)return productionGoal(s,'metal',4);const metal=known(s,'mechanics')?'alloy':'metal';if(balance(s,metal)<4)return productionGoal(s,metal,4);if(known(s,'electricity')&&balance(s,'energy')<20)return productionGoal(s,'energy',20);return {kind:'tools',actions:['craft'],reason:'Meningkatkan alat sesuai penemuan dan bahan industri'};}
+ if(c?.magic&&balance(s,'mana')<20)return {kind:'magic',actions:['channel','useResource'],reason:'Mengisi persediaan mana'};
  return {kind:'general',actions:['social','teach','craft'],reason:'Merawat hubungan dan keahlian'};
 }
 export function workAvailable(s,a){
- const c=civic(s),list=[];if(known(s,'metallurgy')&&s.buildings.furnace){if(s.wood>=2)list.push('fuel');if(affordable(s,{stone:2,fuel:1}))list.push('smelt');}if(known(s,'mechanics')&&s.buildings.workshop&&affordable(s,{metal:2,fuel:1}))list.push('alloy');if(known(s,'electricity')&&s.buildings.generator&&affordable(s,{fuel:1}))list.push('generate');
+ const c=civic(s),list=[...cultureActions(s,a)];if(known(s,'metallurgy')&&s.buildings.furnace){if(s.wood>=2)list.push('fuel');if(affordable(s,{stone:2,fuel:1}))list.push('smelt');}if(known(s,'mechanics')&&s.buildings.workshop&&affordable(s,{metal:2,fuel:1}))list.push('alloy');if(known(s,'electricity')&&s.buildings.generator&&affordable(s,{fuel:1}))list.push('generate');
  if(customTarget(s))list.push('extract');if(customTarget(s,true))list.push('useResource');
  const gifted=a.arcaneSensitivity>=75;if(c&&((!c.magic&&gifted&&a.skills.research>=20&&s.tech>=40&&nearbySource(s))||(c.magic&&a.skills.studyMagic<20&&a.skills.research>=10&&(nearbySource(s)||adults(s).some(b=>b.skills.studyMagic>=20)))))list.push('studyMagic');if(c?.magic&&(gifted||a.skills.studyMagic>=20)){if(nearbySource(s)&&balance(s,'mana')<100)list.push('channel');if(balance(s,'mana')>=2){if(living(s).some(b=>b.health<85))list.push('heal');if(s.project)list.push('enchantBuild');}}
  if(known(s,'electronics')&&known(s,'astronomy')&&s.buildings.observatory&&balance(s,'energy')>=.5&&c.signalProgress<100)list.push('observe');if(c?.ship&&c.ship.progress<c.ship.required&&known(s,'spaceflight')&&s.buildings.shipyard)list.push('assembleShip');if(c?.war&&s.food>=.5&&a.health>=35)list.push('defend');if(s.buildings.school&&a.skills.research>=20&&living(s).some(b=>b.id!==a.id&&b.skills.research<a.skills.research*.7))list.push('teach');return list;
@@ -61,6 +66,7 @@ export function needBonus(s,a,key,g=goal(s)){let n=g.actions.includes(key)?(g.ki
  if(key==='share'&&s.food<living(s).length*3&&a.stash.food>3)n+=8;
  if(key==='studyMagic'&&!civic(s)?.magic)n+=4;if(key==='heal'&&living(s).some(b=>b.health<45))n+=7;if(key==='observe')n+=5;
  if(key==='extract'&&customTarget(s)&&!customTarget(s,true))n+=5;if(key==='useResource'&&customTarget(s,true))n+=5;
+ if(['diplomacy','translate'].includes(key)){const c=civic(s),root=rootOf(s);if(c?.contacts.some(id=>{const other=root.world.settlements.find(x=>x.id===id);return other&&understanding(c,other)<.55;}))n+=key==='translate'?7:3;}
  if(key==='teach'&&nextDiscovery(s)&&Math.max(...adults(s).map(b=>b.skills.research))<nextDiscovery(s).skill)n-=4;
  if(key==='research'&&civic(s)?.study&&a.skills.research<DISCOVERIES[civic(s).study.id].skill*.5)n-=3;
  return n;
@@ -71,6 +77,7 @@ export function runResearch(s,a,scale,{log}){
  if(c.study&&a.skills.research>=DISCOVERIES[c.study.id].skill*.5){c.study.progress=Math.min(c.study.required,c.study.progress+scale);return {reward:3.5,energy:5};}return {reward:s.tech<d.tech?2.5:1.2,energy:4};
 }
 export function runWork(s,a,key,scale,{log}){
+ if(['diplomacy','translate'].includes(key))return cultureWork(s,a,key);
  const c=civic(s);let reward=0,energy=5,note='',target=null;
  if(key==='fuel'&&known(s,'metallurgy')&&s.buildings.furnace&&spend(s,{wood:2})){add(s,'fuel',2*scale);s.achievements.fuel++;reward=balance(s,'fuel')<targets(s).fuel?4:1;energy=7;}
  else if(key==='smelt'&&known(s,'metallurgy')&&s.buildings.furnace&&spend(s,{stone:2,fuel:1})){add(s,'metal',1.5*scale);s.achievements.smelt++;reward=balance(s,'metal')<targets(s).metal?4:1;energy=8;}
