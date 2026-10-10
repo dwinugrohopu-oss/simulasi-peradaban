@@ -50,15 +50,15 @@ export function experiment(s,a,{random,log}){
  const physics=evaluateDesign(design),tool={id:s.nextToolId++,owner:recipient.id,maker:a.id,job,design,physics,name:designName(design),condition:physics.durability,status:'prototype',createdDay:s.day,testedDay:null,measured:null,uses:0};
  s.tools.push(tool);s.prototypes++;log(s,`${a.name} membuat prototipe ${tool.name}; perlu pengujian.`);
  // Preserve equipped and unfinished prototypes; prune old records to keep browser saves small.
- const equipped=new Set(s.agents.filter(a=>a.alive).flatMap(a=>Object.values(a.equipment)));
- while(s.tools.length>TOOL_LIMIT){const index=s.tools.findIndex(t=>!equipped.has(t.id)&&t.status!=='prototype');if(index<0)break;const [removed]=s.tools.splice(index,1);for(const citizen of s.agents)for(const key of Object.keys(citizen.equipment))if(citizen.equipment[key]===removed.id)delete citizen.equipment[key];}
+ const equipped=new Set(s.agents.filter(a=>a.alive).flatMap(a=>JOBS.map(job=>a.equipment[job]).filter(Boolean)));
+ while(s.tools.length>TOOL_LIMIT){const index=s.tools.findIndex(t=>!equipped.has(t.id)&&t.status!=='prototype');if(index<0)break;const [removed]=s.tools.splice(index,1);for(const citizen of s.agents)for(const key of JOBS)if(citizen.equipment[key]===removed.id)delete citizen.equipment[key];}
  return 1;
 }
 function score(a,d){const key=[d.head,d.handle,d.binding,d.shape].join(':');return a.designMemory[key]??0;}
 export function useTool(s,a,job,{random,log}){
  const tool=toolById(s,a.equipment[job]);if(!tool||tool.owner!==a.id||tool.status!=='ready'||tool.condition<=0)return {output:1,energy:1};
  const powered=tool.design.drive!=='electric'||spend(s,{energy:.2});const output=performance(tool,job,powered),energy=clamp(1+tool.physics.mass*.08-Math.max(0,output-1)*.3,.7,1.35);
- tool.uses++;s.achievements.toolUses++;tool.condition=Math.max(0,tool.condition-(.3+tool.physics.mass*.08));
+ tool.uses++;s.achievements.toolUses++;tool.condition=Math.max(0,tool.condition-(.3+tool.physics.mass*.08)*({wood:1,stone:1.4,farm:.7}[job]||1));
  if(random(s)<tool.physics.risk*.03){a.health=Math.max(0,a.health-1.5);tool.condition=Math.max(0,tool.condition-3);}
  if(!tool.condition){tool.status='broken';delete a.equipment[job];log(s,`${a.name}: ${tool.name} rusak setelah ${tool.uses} pemakaian.`);}
  return {output,energy};

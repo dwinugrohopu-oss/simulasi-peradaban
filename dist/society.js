@@ -1,6 +1,6 @@
 import {civic} from './economy.js';
 const clamp=(n,min=0,max=100)=>Math.min(max,Math.max(min,n));
-export function initCitizen(a){a.lastConflict=-100;a.estateSettled=false;a.stash={food:0,wood:0,stone:0};a.reputation=50;a.relations={};a.memories=[];a.equipment={};a.designMemory={};}
+export function initCitizen(a){a.lastConflict=-100;a.estateSettled=false;a.stash={food:0,wood:0,stone:0};a.reputation=50;a.relations={};a.memories=[];a.equipment={};a.home=null;a.illnessDays=0;a.designMemory={};}
 export function remember(a,other,kind,day,impact){a.relations[other.id]=clamp((a.relations[other.id]||0)+impact,-100,100);a.grievance=clamp((a.grievance||0)+(impact<0?-impact*.3:-impact*.5));a.memories.unshift({who:other.id,name:other.name,kind,day});a.memories=a.memories.slice(0,8);if(Object.keys(a.relations).length>32)delete a.relations[Object.keys(a.relations)[0]];}
 export function deposit(s,a,key,amount){const government=civic(s)?.government?.type;const base=a.traits.includes('selfish')?.25:a.traits.includes('greedy')?.15:0;const fraction=['communist','hive'].includes(government)?0:government==='socialist'?base*.5:government==='capitalist'?Math.min(.4,base+.1):government==='liberal'?base+.03:base;const kept=Math.min(amount*fraction,Math.max(0,30-a.stash[key]));a.stash[key]+=kept;s[key]+=amount-kept;return kept;}
 export function cooperation(s,a){const others=s.agents.filter(b=>b.alive&&!b.away&&b.id!==a.id);const trust=others.reduce((n,b)=>n+(a.relations[b.id]||0),0)/Math.max(1,others.length);return clamp((1+trust/250+(civic(s)?.government?.type==='hive'?.08:0))*(.9+(civic(s)?.government?.stability??50)/500)*(civic(s)?.discoveries.includes('cooperationScience')?1.05:1),.5,1.4);}
@@ -22,6 +22,6 @@ export function interact(s,a,key,{random,log}){
   if(!b.health){b.alive=false;b.exitReason='death';s.deathCount++;log(s,b.name+' meninggal akibat konflik.');}
   return a.traits.includes('cruel')?.4:-.5;
  }
- if(key==='social'){const hostile=(a.relations[b.id]||0)<-30||b.reputation<15;remember(a,b,hostile?'dispute':'friendship',s.day,hostile?-2:4);remember(b,a,hostile?'dispute':'friendship',s.day,hostile?-2:4);if(!hostile)a.reputation=clamp(a.reputation+.3);return hostile?-2:.6;}
+ if(key==='social'){const irritated=(!a.home&&a.mood<50)||(!b.home&&b.mood<50);const hostile=(a.relations[b.id]||0)<-30||b.reputation<15||(irritated&&random(s)<.2);remember(a,b,hostile?'dispute':'friendship',s.day,hostile?-2:4);remember(b,a,hostile?'dispute':'friendship',s.day,hostile?-2:4);if(!hostile)a.reputation=clamp(a.reputation+.3);return hostile?-2:.6;}
  return 0;
 }

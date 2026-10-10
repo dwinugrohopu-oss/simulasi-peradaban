@@ -35,7 +35,7 @@ function drawStock(root,c,ctx,selected){
  c.stockCards=stockCardLayout(root,c,selected);
  for(const card of c.stockCards){const civ=root.world.settlements.find(civ=>civ.id===card.civId),stock=warehouseStock(root,civ,c.stockMode),r=stock.resources;
   const leader=root.world.settlements.find(member=>member.id===civ.polityId)||civ;
-  const title=(c.stockMode==='polity'?'Pemerintah '+leader.name:'Gudang '+civ.name);
+  const title=(c.stockMode==='polity'?'Pemerintah '+leader.name:(stateOf(root,civ).buildings.warehouse?'Gudang ':'Tanah · ')+civ.name);
   ctx.strokeStyle=polityColor(civ.polityId);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(card.anchor.x,card.anchor.y);ctx.lineTo(card.x+card.width/2,card.y);ctx.stroke();
   ctx.fillStyle='#10201af2';ctx.fillRect(card.x,card.y,card.width,card.height);ctx.strokeRect(card.x,card.y,card.width,card.height);
   const text=(line,y,color='#d7e9d4',font='11px system-ui')=>{ctx.fillStyle=color;ctx.font=font;ctx.fillText(line,card.x+10,card.y+y,card.width-20);};
@@ -44,7 +44,7 @@ function drawStock(root,c,ctx,selected){
   text('Bijih '+stockNumber(r.ore)+' · Serat '+stockNumber(r.fiber)+' · Tulang '+stockNumber(r.bone),57);
   text('Logam '+stockNumber(r.metal)+' · Paduan '+stockNumber(r.alloy),75);
   text('BB '+stockNumber(r.fuel)+' · Energi '+stockNumber(r.energy)+' · Mana '+stockNumber(r.mana),93);
-  text((c.stockMode==='polity'?stock.members.length+' gudang · ':'')+(stock.custom.length?stock.custom.length+' bahan khusus · ':'')+'Ketuk untuk rincian',114,'#a3b5ab','10px system-ui');
+  text((c.stockMode==='polity'?stock.members.length+' permukiman · ':'')+(Object.values(stock.ground).some(n=>n>0)?'Ada stok di tanah · ':'')+'Ketuk rincian',114,'#a3b5ab','10px system-ui');
  }
 }
 export function drawWorld(root,c,canvas,selected,time){
@@ -71,7 +71,7 @@ export function drawWorld(root,c,canvas,selected,time){
   if(c.zoom>.3){for(const node of nodes){const p=point(node.x,node.y),z=c.zoom;
    if(node.kind==='farm'){ctx.fillStyle='#b6a75f';ctx.fillRect(p.x-10*z,p.y-8*z,20*z,16*z);for(let row=0;row<3;row++){ctx.fillStyle='#4f6b35';ctx.fillRect(p.x-8*z,p.y+(-5+row*5)*z,16*z,2*z);}}
    else if(node.kind==='hut'||node.kind==='habitat'){ctx.fillStyle=node.kind==='habitat'?'#96c9d0':civ.stage>=4?'#c3c5b1':'#bf9c70';ctx.fillRect(p.x-8*z,p.y-5*z,16*z,14*z);ctx.fillStyle='#705d49';ctx.beginPath();ctx.moveTo(p.x-11*z,p.y-5*z);ctx.lineTo(p.x,p.y-14*z);ctx.lineTo(p.x+11*z,p.y-5*z);ctx.fill();}
-   else{const colors={well:'#7dc3d7',school:'#bbc5d4',furnace:'#e69c60',workshop:'#c5b89a',generator:'#ebcf78',observatory:'#b6a2df',shipyard:'#8fd2cc'};circle(node.x,node.y,8,colors[node.kind]||'#a1b39e');}}
+   else{const colors={warehouse:'#d6b877',well:'#7dc3d7',school:'#bbc5d4',furnace:'#e69c60',workshop:'#c5b89a',generator:'#ebcf78',observatory:'#b6a2df',shipyard:'#8fd2cc'};circle(node.x,node.y,8,colors[node.kind]||'#a1b39e');}}
   }
   for(const [key,count]of countKinds){const node=nodes.find(n=>n.kind===key);if(node)label(node.x-15,node.y-24,BUILDINGS[key].name+' ×'+count,key==='farm'?'#e4d589':'#d2dfc7',9);}
   if(c.zoom>.45){
@@ -84,4 +84,4 @@ export function drawWorld(root,c,canvas,selected,time){
  drawStock(root,c,ctx,selected);
 }
 
-export function buildingNodes(s,civ){const bases={hut:[-90,-50],farm:[-100,75],well:[0,135],school:[65,55],furnace:[125,-60],workshop:[150,0],generator:[120,100],observatory:[0,-110],shipyard:[-140,-100],habitat:[-30,10]},nodes=[];for(const [kind,count]of Object.entries(s.buildings)){const cols=Math.ceil(Math.sqrt(Math.max(1,count))),[x,y]=bases[kind]||[0,0];for(let i=0;i<count;i++)nodes.push({kind,index:i,x:civ.x+x+(i%cols-(cols-1)/2)*24,y:civ.y+y+(Math.floor(i/cols)-(Math.ceil(count/cols)-1)/2)*23});}return nodes;}
+export function buildingNodes(s,civ){const bases={warehouse:[-30,180],hut:[-90,-50],farm:[-100,75],well:[0,135],school:[65,55],furnace:[125,-60],workshop:[150,0],generator:[120,100],observatory:[0,-110],shipyard:[-140,-100],habitat:[-30,10]},nodes=[];for(const [kind,count]of Object.entries(s.buildings)){const cols=Math.ceil(Math.sqrt(Math.max(1,count))),[x,y]=bases[kind]||[0,0];for(let i=0;i<count;i++)nodes.push({kind,index:i,x:civ.x+x+(i%cols-(cols-1)/2)*24,y:civ.y+y+(Math.floor(i/cols)-(Math.ceil(count/cols)-1)/2)*23});}return nodes;}

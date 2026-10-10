@@ -1,3 +1,5 @@
+import {housingCapacity,assignHousing,sheltered,housingDay,validateHousing} from './shelter.js';
+import {storageDay} from './storage.js';
 import {BELIEFS,initIdeology,ideologyBonus,reinforceBeliefs} from './ideologies.js';
 import {initFrontier,journeyWork,startGather,startObjectGather,startExplore,needsExploration,gatherTarget,validateFrontierState,validateFrontier} from './frontier.js';
 import {beginResearchDay,initResearch} from './research.js';
@@ -9,7 +11,7 @@ import {experiment,useTool,evaluateDesign,craftingNeeded} from './physics.js';
 import {initCitizen,deposit,cooperation,interact,revengeTarget} from './society.js';
 import {validateDescriptor} from './world-schema.js';
 /* Pure simulation and tabular Q-learning; shared by the browser and Node tests. */
-export const VERSION=7, DAY_MS=4000, OFFLINE_CAP=8*60*60*1000;
+export const VERSION=8, DAY_MS=4000, OFFLINE_CAP=8*60*60*1000;
 import {ACTIONS,LABELS,BUILDINGS,POLICIES,TRAITS,STAGES,POPULATION_LIMIT,BUILDING_LIMIT,TOOL_LIMIT} from './rules.js';
 export {ACTIONS,LABELS,BUILDINGS,POLICIES,TRAITS};
 export function traitBonus(a,key){return ideologyBonus(a,key)+a.traits.reduce((n,k)=>n+(TRAITS[k].jobs.includes(key)?1.2:0),0);}
@@ -21,12 +23,12 @@ const clamp=(n,min=0,max=100)=>Math.min(max,Math.max(min,n));
 export function random(s){let n=s.rng>>>0;n^=n<<13;n^=n>>>17;n^=n<<5;s.rng=n>>>0;return s.rng/4294967296;}
 export function log(s,text){s.logs.unshift({day:s.day,text});s.logs=s.logs.slice(0,45);}
 export function population(s){return s.agents.filter(a=>a.alive&&!a.away);}
-export function capacity(s){return 3+s.buildings.hut*3+s.buildings.habitat*4;}
+export function capacity(s){return housingCapacity(s);}
 export function era(s){return STAGES[civic(s)?.stage||0];}
-export function newAgent(s,origin='immigrant'){const id=s.nextId++,a={id,name:NAMES[(id-1)%NAMES.length]+(id>16?' '+Math.ceil(id/16):''),age:origin==='birth'?0:16+Math.floor(random(s)*18),origin,traits:chooseTraits(s),alive:true,away:false,grievance:0,health:100,hunger:15,energy:90,mood:70,action:'rest',steps:0,rewardSum:0,explorations:0,lastReward:0,q:{},visits:{},skills:Object.fromEntries(ACTIONS.map(k=>[k,0])),color:Math.floor(random(s)*5),exitReason:null};initCitizen(a);initAttributes(s,a);initIdeology(s,a);a.journey=null;a.researchBranch=null;a.arcaneSensitivity=aptitude(s.seed,a.id);s.agents.push(a);if(s.agents.length>100){let excess=s.agents.length-100;s.agents=s.agents.filter(item=>item.alive||excess--<=0);}return a;}
+export function newAgent(s,origin='immigrant'){resolveDeaths(s);const id=s.nextId++,a={id,name:NAMES[(id-1)%NAMES.length]+(id>16?' '+Math.ceil(id/16):''),age:origin==='birth'?0:16+Math.floor(random(s)*18),origin,traits:chooseTraits(s),alive:true,away:false,grievance:0,health:100,hunger:15,energy:90,mood:70,action:'rest',steps:0,rewardSum:0,explorations:0,lastReward:0,q:{},visits:{},skills:Object.fromEntries(ACTIONS.map(k=>[k,0])),color:Math.floor(random(s)*5),exitReason:null};initCitizen(a);initAttributes(s,a);initIdeology(s,a);a.journey=null;a.researchBranch=null;a.arcaneSensitivity=aptitude(s.seed,a.id);s.agents.push(a);if(s.agents.length>100){let excess=s.agents.length-100;s.agents=s.agents.filter(item=>item.alive||excess--<=0);}return a;}
 export function newGame(seed=Date.now(),now=Date.now(),options={}){
- const s={version:VERSION,rng:(Number(seed)>>>0)||1,seed:(Number(seed)>>>0)||1,day:0,food:220,wood:100,stone:80,fiber:30,bone:12,ore:0,weapons:[],vehicles:[],nextWeaponId:1,nextVehicleId:1,vehicleProject:null,tools:[],nextToolId:1,prototypes:0,experiments:0,tech:0,harmony:75,policy:'balanced',buildings:Object.fromEntries(Object.keys(BUILDINGS).map(k=>[k,!options.empty?(k==='hut'?6:k==='farm'?2:0):0])),project:null,agents:[],nextId:1,logs:[],paused:false,lastSaved:now,carryMs:0,history:[],totalSteps:0,deathCount:0,birthCount:0,immigrationCount:0,emigrationCount:0,objects:[],nextObjectId:1};
- if(options.empty){for(const key of ['food','wood','stone','fiber','bone'])s[key]=0;}else{for(let i=0;i<20;i++)newAgent(s,'founder');log(s,'Dua puluh perintis dengan profil ideologi berbeda tiba. Mereka mulai mencoba dan belajar.');}initEconomy(s);s.world=options.world===false?null:createWorld(s,newGame);if(s.world){bindWorld(s);initFrontier(s);}return s;
+ const s={version:VERSION,rng:(Number(seed)>>>0)||1,seed:(Number(seed)>>>0)||1,day:0,food:10,wood:0,stone:0,fiber:0,bone:0,ore:0,weapons:[],vehicles:[],nextWeaponId:1,nextVehicleId:1,vehicleProject:null,tools:[],nextToolId:1,prototypes:0,experiments:0,tech:0,harmony:75,policy:'balanced',buildings:Object.fromEntries(Object.keys(BUILDINGS).map(k=>[k,0])),project:null,agents:[],nextId:1,logs:[],paused:false,lastSaved:now,carryMs:0,history:[],totalSteps:0,deathCount:0,birthCount:0,immigrationCount:0,emigrationCount:0,objects:[],nextObjectId:1};
+ if(options.empty){for(const key of ['food','wood','stone','fiber','bone'])s[key]=0;}else{for(let i=0;i<20;i++)newAgent(s,'founder');log(s,'Dua puluh perintis dengan profil ideologi berbeda tiba. Tanpa rumah, ladang atau gudang, mereka membawa total sepuluh porsi bekal.');}initEconomy(s);s.world=options.world===false?null:createWorld(s,newGame);if(s.world){bindWorld(s);initFrontier(s);}return s;
 }
 export function observation(s,a){return [a.hunger>=55?1:0,a.energy<35?1:0,s.food<population(s).length*3?1:0,s.project?1:0,s.harmony<40?1:0,goal(s).kind,s.policy].join(':');}
 export function available(s,a){if(!a.alive||a.away)return [];if(a.journey)return a.journey.phase==='camp'?(a.energy<25||a.journey.provisions<.5?['travel']:['defend','travel']):['travel'];if(a.hunger>=85&&(s.food>=1||a.stash.food>=1))return ['eat'];if(a.energy<=5)return ['rest'];if(a.age<16)return ['forage','rest','social',...(s.food>=1&&a.hunger>10?['eat']:[])];const wanted=targets(s),list=['rest','social',...workAvailable(s,a)];if(s.food<wanted.food*2||s.fiber<wanted.fiber||s.bone<wanted.bone)list.push('forage');if(s.wood<wanted.wood*2)list.push('wood');if(s.stone<wanted.stone*2)list.push('stone');if(nextDiscovery(s)||!civic(s))list.push('research');if(craftingNeeded(s,a))list.push('craft');if(s.food<wanted.food*2&&s.objects.some(o=>o.kind==='river'&&o.stock>=1))list.push('fish');if(s.food<wanted.food*2&&s.buildings.farm&&(s._turn?.farmers||0)<s.buildings.farm*3)list.push('farm');if(s.world||s._context){if(needsExploration(s))list.push('explore');if(known(s,'metallurgy')&&s.ore<40&&gatherTarget(s,'ore'))list.push('mineOre');}if(s.project)list.push('build');if((s.food>=1||a.stash.food>=1)&&a.hunger>10)list.push('eat');if(Object.values(a.stash).some(n=>n>0))list.push('share');if(a.stash.food<25&&population(s).some(b=>b.id!==a.id&&b.age>=16)){if(a.traits.includes('greedy'))list.push('steal');if(a.traits.includes('manipulative'))list.push('persuade');}if(s.day-a.lastConflict>=10&&population(s).some(b=>b.id!==a.id&&b.age>=16)){if(a.traits.some(t=>['aggressive','cruel'].includes(t)))list.push('intimidate');if(a.traits.includes('vengeful')&&revengeTarget(s,a))list.push('revenge');}return list;}
@@ -64,7 +66,7 @@ export function act(s,a,key){
  case 'craft':reward=experiment(s,a,{random,log});a.energy-=6;break;
  case 'fish': {if(s.world||s._context){workNote=startObjectGather(s,a,s.objects.find(o=>o.kind==='river'&&o.stock>=1),'food',12*scale,log);reward=workNote.reward;a.energy-=workNote.energy;break;}const amount=harvestObject(s,'river',3*scale);deposit(s,a,'food',amount);a.energy-=5;reward=amount*(scarce?1.5:s.food<population(s).length*6?.6:.05);break;}
  case 'eat': if(s.food>=1||a.stash.food>=1){const source=a.stash.food>=1?a.stash:s;source.food-=a.traits.includes('frugal')?.8:1;a.hunger=clamp(a.hunger-38);a.health=clamp(a.health+1);reward=(before.hunger-a.hunger)*.16;}else reward=-2;break;
- case 'rest':a.energy=clamp(a.energy+27);if(a.hunger<80)a.health=clamp(a.health+.25);reward=(a.energy-before.energy)*.18;break;
+ case 'rest':a.energy=clamp(a.energy+(sheltered(a)?27:18));if(a.hunger<80&&sheltered(a))a.health=clamp(a.health+.25);reward=(a.energy-before.energy)*.18;break;
  case 'steal':case 'intimidate':case 'revenge':case 'persuade':case 'share':reward=interact(s,a,key,{random,log});a.energy-=3;if(['intimidate','revenge'].includes(key))a.lastConflict=s.day;break;
  case 'forgeWeapon':case 'makeVehicle':case 'treat':case 'restore':case 'meditate':case 'govern':case 'smelt':case 'fuel':case 'alloy':case 'generate':case 'extract':case 'useResource':case 'studyMagic':case 'channel':case 'heal':case 'enchantBuild':case 'observe':case 'assembleShip':case 'defend':case 'teach':case 'diplomacy':case 'translate':{workNote=runWork(s,a,key,scale,{log});reward=workNote.reward;a.energy-=workNote.energy;break;}
  case 'social': {const interaction=interact(s,a,key,{random,log});const moodBefore=a.mood;a.mood=clamp(a.mood+(interaction<0?-4:20*scale));reward=(a.mood-moodBefore)*.12+(s.harmony<40?6:.5);s.harmony=clamp(s.harmony+(interaction<0?-.5:1.5*scale));reward+=interaction;a.energy-=2;break;}
@@ -72,13 +74,13 @@ export function act(s,a,key){
  if(a.energy<before.energy)a.energy=before.energy-(before.energy-a.energy)*tool.energy*a.traits.reduce((n,k)=>n*TRAITS[k].energy,1)*(known(s,'symbiosis')?.95:1);
  a.hunger=clamp(a.hunger+(a.age<16?2:3)-(known(s,'physiology')?.2:0));a.mood=clamp(a.mood-.5);a.energy=clamp(a.energy);
  if(a.hunger>=90){a.health=clamp(a.health-3);reward-=5;}if(a.energy<=10)reward-=2;
- if(a.hunger<55&&a.energy>25){a.health=clamp(a.health+.05+s.buildings.well*.08+(known(s,'publicHealth')?.1:0));reward+=.2;}
+ if(a.hunger<55&&a.energy>25){a.health=clamp(a.health+(sheltered(a)?.05:0)+s.buildings.well*.08+(known(s,'publicHealth')?.1:0));reward+=.2;}
  if(s.policy==='survival'&&['forage','farm'].includes(key))reward+=2;
  if(s.policy==='expansion'&&['wood','stone','build'].includes(key))reward+=1.5;
  if(s.policy==='knowledge'&&['research','craft','teach','studyMagic','observe'].includes(key))reward+=2;
  reinforceBeliefs(a,key,reward);a.skills[key]+=1;trainAttributes(a,key);a.action=key;if(s.project&&s.project.progress>=s.project.required)completeProject(s);
  const inputs={},outputs={};for(const resource of RESOURCE_KEYS){const delta=balance(s,resource)-resources[resource];if(delta<-.000001)inputs[resource]=-delta;else if(delta>.000001)outputs[resource]=delta;}s._turn.records.push({id:a.id,name:a.name,action:key,inputs,outputs,target:workNote?.target||null,note:workNote?.note||''});
- if(a.health<=0){a.alive=false;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal karena kebutuhan hidup tidak terpenuhi.');reward-=15;}
+ if(a.health<=0){a.alive=false;a.home=null;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal karena kebutuhan hidup tidak terpenuhi.');reward-=15;}
  return reward;
 }
 function annualEvent(s){
@@ -87,17 +89,17 @@ function annualEvent(s){
  else if(event===1){log(s,'Musim berganti; persediaan kayu tetap bergantung pada pekerjaan warga.');}
  else if(event===2){const learned=population(s).some(a=>a.action==='research')?2:0;s.tech+=learned;log(s,learned?'Pengamatan musim membantu penelitian: pengetahuan +2.':'Pergantian musim memberi bahan pengamatan baru.');}
  else {s.harmony=clamp(s.harmony-12);for(const a of population(s))a.mood=clamp(a.mood-8);log(s,'Perselisihan warga menurunkan keharmonisan.');}
- for(const a of s.agents.filter(a=>a.alive)){a.age++;if(a.age>75&&random(s)<.04+(a.age-75)*.008){a.alive=false;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal pada usia '+a.age+' tahun.');}}
+ for(const a of s.agents.filter(a=>a.alive)){a.age++;if(a.age>75&&random(s)<.04+(a.age-75)*.008){a.alive=false;a.home=null;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal pada usia '+a.age+' tahun.');}}
 }
 export function tick(s){if(s.paused||!worldPopulation(s))return false;if(s.world)return tickWorld(s,{tick:tickSettlement,newGame,log,resolveDeaths});return tickSettlement(s);}
 export function tickSettlement(s,options={}){
  if(s.paused)return false;
- if(options.advanceDay!==false)s.day++;ensureTurn(s,true);if(!s.world&&!s._context)beginResearchDay(s);updateObjects(s);autoPlan(s);s.harmony=clamp(s.harmony-.08);
+ if(options.advanceDay!==false)s.day++;ensureTurn(s,true);if(!s.world&&!s._context)beginResearchDay(s);updateObjects(s);housingDay(s,random,log);resolveDeaths(s);autoPlan(s);s.harmony=clamp(s.harmony-.08);
  // Rotate order to avoid consistently privileging one agent over shared food/building resources.
  const agents=population(s),offset=s.day%agents.length;
  for(let i=0;i<agents.length;i++){const a=agents[(i+offset)%agents.length];if(!a.alive)continue;const state=observation(s,a),key=selectAction(s,a,state),reward=act(s,a,key);learn(a,state,key,reward,observation(s,a),available(s,a),!a.alive,s.buildings.school?.22:.16);s.totalSteps++;}
  if(s.day%60===0)annualEvent(s);
- const storage=Math.max(30,population(s).length*12+s.buildings.farm*20),spoiled=Math.max(0,s.food-storage)*.005*(known(s,'closedEcology')?.5:1);s.food-=spoiled;if(spoiled>=1&&s.day%30===0)log(s,'Pangan berlebih rusak di penyimpanan: '+Math.round(spoiled)+'.');demographics(s);for(const a of s.agents){if(!a.alive&&!a.away&&!a.estateSettled){if(a.exitReason==='death')for(const k of ['food','wood','stone']){s[k]+=a.stash[k];a.stash[k]=0;}a.estateSettled=true;for(const t of s.tools)if(t.owner===a.id&&t.status==='prototype')t.status='failed';}if(s.day%60===0&&!a.traits.includes('vengeful'))for(const k of Object.keys(a.relations))a.relations[k]*=.9;}s.objects=s.objects.filter(o=>o.kind!=='event'||o.remaining>0);
+ storageDay(s,log);demographics(s);for(const a of s.agents){if(!a.alive){a.home=null;for(const w of s.weapons)if(w.owner===a.id)w.owner=null;delete a.equipment.weapon;}if(!a.alive&&!a.away&&!a.estateSettled){if(a.exitReason==='death')for(const k of ['food','wood','stone']){s[k]+=a.stash[k];a.stash[k]=0;}a.estateSettled=true;for(const t of s.tools)if(t.owner===a.id&&t.status==='prototype')t.status='failed';}if(s.day%60===0&&!a.traits.includes('vengeful'))for(const k of Object.keys(a.relations))a.relations[k]*=.9;}s.objects=s.objects.filter(o=>o.kind!=='event'||o.remaining>0);
  s.lastTurn={day:s.day,goal:goal(s).reason,allocations:s._turn.allocations.map(a=>({...a})),records:s._turn.records.map(r=>({...r}))};
  if(s.day%10===0){s.history.push({day:s.day,pop:population(s).length,food:Math.round(s.food),tech:Math.round(s.tech)});s.history=s.history.slice(-90);}
  resolveDeaths(s);return true;
@@ -113,6 +115,7 @@ export function validateSave(value,options={}){
  if(oldVersion===5){s.version=VERSION;for(const a of s.agents){for(const key of ACTIONS){a.skills[key]??=0;for(const r of Object.values(a.q))r[key]??=0;}}}if(oldVersion<6){for(const a of s.agents)initAttributes(s,a);if(s.world)for(const c of s.world.settlements)initCulture(s,c);}
 
  if(oldVersion>=1&&oldVersion<7){s.version=VERSION;s.ore??=0;s.weapons??=[];s.vehicles??=[];s.nextWeaponId??=1;s.nextVehicleId??=1;s.vehicleProject??=null;for(const k of Object.keys(BUILDINGS))s.buildings[k]??=0;for(const a of s.agents){initIdeology(s,a);a.journey??=null;a.researchBranch??=null;for(const k of ACTIONS){a.skills[k]??=0;for(const r of Object.values(a.q))r[k]??=0;}}if(s.world){for(const c of s.world.settlements){initResearch(c);for(const p of c.studies){p.progress=p.progress/p.required*DISCOVERIES[p.id].work;p.required=DISCOVERIES[p.id].work;}if(c.magic&&!c.discoveries.includes('arcanePractice'))c.discoveries.push('arcanePractice');const grant=id=>{for(const req of DISCOVERIES[id].requires)if(!c.discoveries.includes(req)){c.discoveries.push(req);grant(req);}};for(const id of [...c.discoveries])grant(id);c.stage=Math.max(0,...c.discoveries.map(id=>DISCOVERIES[id].stage));}bindWorld(s);initFrontier(s);}}
+ if(oldVersion>=1&&oldVersion<8){s.version=VERSION;s.buildings.warehouse??=0;for(const a of s.agents){a.home=null;a.illnessDays??=0;}for(const w of s.weapons||[])w.owner??=null;assignHousing(s);}
  if(options.isolated&&s.world!==null||!options.isolated&&s.world===null)throw Error('Simpanan peradaban harus memiliki struktur dunia yang sesuai.');const finite=(x,min,max)=>typeof x==='number'&&Number.isFinite(x)&&x>=min&&x<=max;
  if(!s||s.version!==VERSION||!finite(s.rng,1,4294967295)||!finite(s.seed,1,4294967295)||!finite(s.day,0,1e8)||!finite(s.nextId,1,1e7)||!finite(s.lastSaved,0,1e16)||!finite(s.carryMs,0,DAY_MS)||typeof s.paused!=='boolean'||!Object.hasOwn(POLICIES,s.policy))throw Error('Format simpanan tidak cocok.');
  for(const key of ['food','wood','stone','tech','harmony','totalSteps','deathCount'])if(!finite(s[key],0,1e12))throw Error('Nilai simpanan tidak valid.');
@@ -136,7 +139,7 @@ export function validateSave(value,options={}){
  if(!Array.isArray(s.objects)||s.objects.length>24)throw Error('Objek dunia tidak valid.');
  const objectIds=new Set();for(const o of s.objects){validateDescriptor(o.descriptor);if(!Number.isInteger(o.id)||o.id<1||o.id>=s.nextObjectId||objectIds.has(o.id)||o.kind!==o.descriptor.kind||!finite(o.stock,0,1000)||!finite(o.remaining,0,180))throw Error('Objek simpanan tidak valid.');objectIds.add(o.id);}
  for(const a of s.agents)if(!Array.isArray(a.traits)||a.traits.length!==2||new Set(a.traits).size!==2||a.traits.some(k=>!Object.hasOwn(TRAITS,k))||!['founder','birth','immigrant'].includes(a.origin)||![null,'death','emigration'].includes(a.exitReason))throw Error('Sifat penduduk tidak valid.');
- validateFrontierState(s,finite);for(const a of s.agents)for(const k of Object.keys(BELIEFS))if(!finite(a.ideology?.[k],0,100))throw Error('Ideologi warga tidak valid.');validateSociety(s,finite);validateTurn(s,finite);validateEconomy(s,finite);validateWorld(s,validateSave,validateDescriptor,finite);if(s.world){validateFrontier(s,finite);bindWorld(s);}return s;
+ validateFrontierState(s,finite);for(const a of s.agents)for(const k of Object.keys(BELIEFS))if(!finite(a.ideology?.[k],0,100))throw Error('Ideologi warga tidak valid.');validateSociety(s,finite);validateHousing(s,finite);validateTurn(s,finite);validateEconomy(s,finite);validateWorld(s,validateSave,validateDescriptor,finite);if(s.world){validateFrontier(s,finite);bindWorld(s);}return s;
 }
 
 export function applyObject(s,value,civId=1){
@@ -152,7 +155,7 @@ function weatherFactor(s){return s.objects.some(o=>o.kind==='event'&&o.descripto
 function updateObjects(s){
  for(const o of s.objects){const d=o.descriptor;if(o.kind==='river'){o.stock=Math.min(d.richness*80,o.stock+.2*d.richness);if(s.day%60===0&&random(s)<d.intensity*.06){s.food*=.85;for(const a of population(s))a.health=clamp(a.health-2*d.intensity);log(s,d.name+' meluap: pangan -15%, kesehatan warga menurun.');}}
  if(o.kind==='event'&&o.remaining>0){if(d.event==='flood')s.food*=1-.003*d.intensity;if(d.event==='disease')for(const a of population(s))a.health=clamp(a.health-.15*d.intensity);if(d.event==='festival'){s.harmony=clamp(s.harmony+.2*d.intensity);for(const a of population(s))a.mood=clamp(a.mood+.2*d.intensity);}o.remaining--;if(o.remaining===0)log(s,d.name+' berakhir.');}}
- for(const a of population(s))if(a.health<=0){a.alive=false;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal akibat dampak peristiwa dunia.');}
+ for(const a of population(s))if(a.health<=0){a.alive=false;a.home=null;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal akibat dampak peristiwa dunia.');}
  // Expired events are removed so players can add new interventions indefinitely.
 
 }
@@ -176,19 +179,19 @@ function validateSociety(s,finite){
  for(const k of ['successfulTools','toolUses','smelt','fuel','alloy','generate'])if(!finite(s.achievements?.[k],0,1e12))throw Error('Bukti praktik tidak valid.');
  for(const a of s.agents){if(typeof a.away!=='boolean'||!finite(a.grievance,0,100))throw Error('Status warga tidak valid.');for(const k of ['food','wood','stone'])if(!finite(a.stash?.[k],0,30))throw Error('Persediaan pribadi tidak valid.');if(!finite(a.reputation,0,100)||!finite(a.lastConflict,-100,s.day)||typeof a.estateSettled!=='boolean'||!Array.isArray(a.memories)||a.memories.length>8)throw Error('Hubungan warga tidak valid.');
  for(const field of ['relations','equipment','designMemory'])if(!a[field]||typeof a[field]!=='object'||Array.isArray(a[field]))throw Error('Data warga tidak valid.');
- if(Object.keys(a.relations).length>32||Object.keys(a.designMemory).length>600||Object.keys(a.equipment).length>3)throw Error('Arsip warga terlalu besar.');
+ if(Object.keys(a.relations).length>32||Object.keys(a.designMemory).length>600||Object.keys(a.equipment).length>4)throw Error('Arsip warga terlalu besar.');
  for(const [id,n]of Object.entries(a.relations))if(!/^\d+$/.test(id)||Number(id)<1||Number(id)>=s.nextId||!finite(n,-100,100))throw Error('Relasi tidak valid.');
  for(const m of a.memories)if(m.scope!==undefined&&(!Number.isInteger(m.scope)||!finite(m.scope,1,1e8))||!Number.isInteger(m.who)||m.who<1||(m.scope?m.who>1e7:m.who>=s.nextId)||typeof m.name!=='string'||m.name.length>50||!['theft','attack','intimidation','revenge','help','manipulation','hostility','dispute','friendship'].includes(m.kind)||!finite(m.day,0,s.day))throw Error('Ingatan tidak valid.');
  for(const [key,n]of Object.entries(a.designMemory))if(!/^(wood|stone|bone|metal|alloy):(wood|stone|bone|metal|alloy):(fiber|wood|none|metal|alloy):(blade|pick|hoe)(?::(manual|electric))?$/.test(key)||!finite(n,-1,2))throw Error('Ingatan rancangan tidak valid.');
- for(const [job,id]of Object.entries(a.equipment))if(!['wood','stone','farm'].includes(job)||!s.tools.some(t=>t.id===id&&t.owner===a.id&&t.job===job))throw Error('Peralatan warga tidak valid.');
+ for(const [job,id]of Object.entries(a.equipment))if(job==='weapon'?!s.weapons.some(w=>w.id===id&&w.owner===a.id&&w.condition>0):!['wood','stone','farm'].includes(job)||!s.tools.some(t=>t.id===id&&t.owner===a.id&&t.job===job&&t.status==='ready'&&t.condition>0))throw Error('Peralatan warga tidak valid.');
  }
 }
 
 export function worldPopulation(s){return s.agents.filter(a=>a.alive).length+(s.world?s.world.settlements.filter(c=>c.id!==1).reduce((n,c)=>n+c.state.agents.filter(a=>a.alive).length,0):0);}
 
 function ensureTurn(s,reset=false){if(reset||!s._turn||s._turn.day!==s.day)Object.defineProperty(s,'_turn',{value:{day:s.day,records:[],allocations:[],farmers:0,defense:0,migrant:null},enumerable:false,configurable:true});}
-export function completeProject(s){if(!s.project||s.project.progress<s.project.required)return false;const key=s.project.key;s.buildings[key]++;s.project=null;log(s,BUILDINGS[key].name+' selesai dibangun.');return true;}
-export function resolveDeaths(s){for(const a of s.agents){if(a.alive&&a.health<=0){a.alive=false;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal akibat luka atau peristiwa dunia.');}if(!a.alive&&!a.away&&!a.estateSettled){if(a.exitReason==='death')for(const key of ['food','wood','stone']){s[key]+=a.stash[key];a.stash[key]=0;}a.estateSettled=true;for(const t of s.tools)if(t.owner===a.id&&t.status==='prototype')t.status='failed';}}}
+export function completeProject(s){if(!s.project||s.project.progress<s.project.required)return false;const key=s.project.key;s.buildings[key]++;s.project=null;assignHousing(s);log(s,BUILDINGS[key].name+' selesai dibangun.');return true;}
+export function resolveDeaths(s){for(const a of s.agents){if(a.alive&&a.health<=0){a.alive=false;a.home=null;a.exitReason='death';s.deathCount++;log(s,a.name+' meninggal akibat luka atau peristiwa dunia.');}if(!a.alive){a.home=null;for(const w of s.weapons)if(w.owner===a.id)w.owner=null;delete a.equipment.weapon;}if(!a.alive&&!a.away&&!a.estateSettled){if(a.exitReason==='death')for(const key of ['food','wood','stone']){s[key]+=a.stash[key];a.stash[key]=0;}a.estateSettled=true;for(const t of s.tools)if(t.owner===a.id&&t.status==='prototype')t.status='failed';}}}
 function initNewFields(s){s.achievements??={successfulTools:s.tools.filter(t=>t.measured>.05).length,toolUses:s.tools.reduce((n,t)=>n+t.uses,0),smelt:0,fuel:0,alloy:0,generate:0};s.lastTurn=null;}
 export {goal,needBonus};
 
