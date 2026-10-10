@@ -68,7 +68,7 @@ test('more equipment drives warehouse planning and broken weapon archives are pr
  const s=newGame(8,0);s.buildings.warehouse=1;s.tools=Array.from({length:41},(_,i)=>tool(s,i+1));s.nextToolId=42;assert.ok(buildingNeeds(s).find(n=>n.key==='warehouse').score>0);
  s.tools=[];s.agents[0].equipment={weapon:1};s.weapons=Array.from({length:512},(_,i)=>({id:i+1,type:'stone',condition:i===0?100:0,uses:0,owner:i===0?s.agents[0].id:null}));s.nextWeaponId=513;
  s.world.settlements[0].discoveries=['agriculture','weaponry'];s.world.settlements[0].stage=1;s.buildings.arsenal=1;s.wood=100;s.stone=20;
- equipmentWork(s,s.agents[0],'forgeWeapon',1,log);assert.equal(s.weapons.length,512);assert.ok(s.weapons.some(w=>w.id===1&&w.owner===s.agents[0].id));assert.ok(s.weapons.some(w=>w.id===513));validateSave(s);
+ equipmentWork(s,s.agents[0],'forgeWeapon',1,log);assert.equal(s.weapons.length,512);assert.ok(s.weapons.some(w=>w.id===1&&w.condition===100&&w.owner===null));assert.ok(s.weapons.some(w=>w.id===513&&w.owner===s.agents[0].id));assert.equal(s.agents[0].equipment.weapon,513);validateSave(s);
 });
 
 
