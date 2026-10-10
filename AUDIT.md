@@ -71,3 +71,13 @@ Alat kerja tetap memakai ketahanan rancangan dan sekarang mempunyai keausan sesu
 Verifikasi migrasi juga memakai simpanan asli dari commit v0.8, bukan hanya fixture: stok, alat, rumah dan Q dipertahankan, gudang tidak ditambahkan. Pengujian mekanik lama menggunakan fixture dengan rumah dan gudang agar skenario tetap mengisolasi mekaniknya; awal dunia tanpa bangunan diuji terpisah dengan beberapa seed. Verifikasi visual browser/HP belum dapat dilakukan di lingkungan ini.
 
 Validasi terakhir: simulasi offline 7.200 hari dan enam seed lain selama 2.500 hari lolos validasi simpanan. Seluruh 113 skenario lolos setelah fixture uji upgrade alat diberi kapasitas gudang yang cukup untuk mengisolasi kebutuhan bahan alat. Build statis juga berhasil.
+
+## Pembaruan 0.10 — empat desa, tabel penduduk dan deposit kecil
+
+Empat desa manusia berbagi 20 pendiri dan 10 porsi bekal: lima warga dan 2,5 porsi per desa. Identitas, sifat dan ideologi pendiri dipertahankan tanpa duplikasi. Kaum Aster tetap 20 warga dengan 10 porsi bekal. Semua desa tetap tanpa bangunan atau alat awal.
+
+Dunia baru memiliki 12 deposit per planet, masing-masing berkapasitas 100–300 unit. Sumber dasar pangan/kayu masih dapat dijangkau warga awal; batu dan bijih tersebar lebih jauh. Mineral tetap tidak terbarukan. Simpanan lama dengan 108 deposit tetap valid, tidak dipindah atau dikurangi stoknya.
+
+UI penduduk memakai tabel kegiatan, profesi dan umur, dengan detail karakter yang membuka seluruh kondisi dan equipment. Berpindah desa menutup detail supaya ID warga dari desa lain tidak tertukar. Skenario mekanik lama memakai fixture dengan dua desa dan deposit banyak; uji dunia baru memeriksa distribusi desa, konservasi pendiri/bekal, sebaran kecil dan perilaku detail UI secara terpisah.
+
+Verifikasi akhir: 116 skenario telah lolos setelah fixture migrasi versi 2 memakai dunia tanpa perjalanan, sesuai fitur versi tersebut (115 skenario lolos dalam regresi penuh; keenam tes discovery, termasuk fixture yang diperbaiki, lolos saat diuji ulang). Build statis berhasil. Dunia baru dengan lima desa juga dijalankan 500 hari pada seed 1, 2, 42 dan 101 dan simpanannya valid; kelangkaan dapat menyebabkan penyusutan atau berakhirnya desa. Simpanan asli v0.8 tetap mempunyai dua desa, 108 deposit dan stok pangan yang sama setelah migrasi.

@@ -11,7 +11,16 @@ const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
 export function aptitude(seed,id){let x=(seed^Math.imul(id,2654435761))>>>0;x=Math.imul(x^(x>>>16),2246822507)>>>0;return x%101;}
 export function initEconomy(s){s.industry={metal:0,fuel:0,energy:0,alloy:0,mana:0};s.customResources=[];s.achievements={successfulTools:0,toolUses:0,smelt:0,fuel:0,alloy:0,generate:0};s.lastTurn=null;for(const a of s.agents)if(a.arcaneSensitivity===undefined)a.arcaneSensitivity=aptitude(s.seed,a.id);}
 function settlement(id,name,species,planet,x,y,state=null){return {id,name,species,planet,x,y,state,discoveries:[],stage:0,grievance:0,lastSplit:-120,magic:false,magicProgress:0,signalProgress:0,launchProgress:0,flight:null,contacts:[],relations:{},war:null,lastWar:-120,study:null,studies:[],ship:null,surveyed:[planet],expeditionPlan:null,colony:false};}
-export function createWorld(s,newGame){const alien=newGame((s.seed^0xabc123)>>>0||2,s.lastSaved,{world:false});alien.day=s.day;return {nextId:3,settlements:[settlement(1,'Lembah Asal','human',0,900,900),settlement(2,'Kaum Aster','alien',1,1700,900,alien)],planets:[{id:0,name:'Bumi Aruna',x:800,y:900},{id:1,name:'Aster',x:2100,y:550},{id:2,name:'Nusa Senyap',x:2450,y:1400}],sources:[{planet:0,x:960,y:940,power:2},{planet:1,x:1750,y:920,power:3}],events:[],nextEventId:1,splits:0,wars:0,contacts:0,colonies:0};}
+export function createWorld(s,newGame,{splitFounders=true}={}){
+ const founders=s.agents.slice(),alien=newGame((s.seed^0xabc123)>>>0||2,s.lastSaved,{world:false});alien.day=s.day;
+ const villages=[settlement(1,'Lembah Asal','human',0,900,900),settlement(2,'Kaum Aster','alien',1,1700,900,alien)];
+ for(const [i,name,x,y]of (splitFounders?[[1,'Lembah Timur',1600,500],[2,'Lembah Seberang',2300,900],[3,'Lembah Selatan',1600,1500]]:[])){
+  const child=newGame((s.seed^Math.imul(i,123457))>>>0||1,s.lastSaved,{world:false,empty:true});child.day=s.day;child.agents=founders.slice(i*5,i*5+5);child.nextId=s.nextId;child.food=2.5;
+  villages.push(settlement(i+2,name,'human',0,x,y,child));
+ }
+ if(splitFounders){s.agents=founders.slice(0,5);s.food=2.5;for(const st of [s,...villages.filter(c=>c.state&&c.species==='human').map(c=>c.state)])st.logs=[{day:s.day,text:'Lima perintis tiba tanpa bangunan atau alat, membawa total 2,5 porsi bekal.'}];}
+ return {nextId:splitFounders?6:3,settlements:villages,planets:[{id:0,name:'Bumi Aruna',x:800,y:900},{id:1,name:'Aster',x:2100,y:550},{id:2,name:'Nusa Senyap',x:2450,y:1400}],sources:[{planet:0,x:960,y:940,power:2},{planet:1,x:1750,y:920,power:3}],events:[],nextEventId:1,splits:0,wars:0,contacts:0,colonies:0};
+}
 export function stateOf(root,civ){return civ.id===1?root:civ.state;}
 export function stageName(civ){return STAGES[civ.stage];}
 function has(civ,id){return civ.discoveries.includes(id);}

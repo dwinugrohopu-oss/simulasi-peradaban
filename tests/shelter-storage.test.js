@@ -1,3 +1,4 @@
+import {legacyWorld} from './fixtures.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newGame,act,startProject,validateSave,tick,worldPopulation,log,resolveDeaths,newAgent} from '../engine.js';
@@ -47,14 +48,14 @@ test('real beds reserve places for expedition crew; homelessness worsens rest, s
 });
 
 test('version seven saves migrate without inventing a warehouse or changing supplies, tools and Q',()=>{
- const old=newGame(6,0);old.version=7;old.world.settlements[1].state.version=7;old.buildings.hut=2;
+ const old=legacyWorld(6,0);old.version=7;old.world.settlements[1].state.version=7;old.buildings.hut=2;
  for(const st of [old,old.world.settlements[1].state]){delete st.buildings.warehouse;for(const a of st.agents){delete a.home;delete a.illnessDays;}}
  const restored=validateSave(old);assert.equal(restored.version,8);assert.equal(restored.buildings.warehouse,0);assert.equal(restored.food,old.food);assert.equal(restored.buildings.hut,2);assert.equal(restored.agents.filter(a=>a.home).length,6);assert.deepEqual(restored.agents[0].q,old.agents[0].q);assert.deepEqual(validateSave(restored),restored);
  const bad=structuredClone(restored);bad.agents[1].home=bad.agents[0].home;assert.throws(()=>validateSave(bad));bad.agents[1].home=null;bad.agents[0].illnessDays=-1;assert.throws(()=>validateSave(bad));
 });
 
 test('minimal ration worlds gather, build and survive from bare ground across several seeds',()=>{
- for(const seed of [1,2,42,101]){const s=newGame(seed,0);for(let day=0;day<250;day++)tick(s);for(const c of s.world.settlements.slice(0,2)){const st=stateOf(s,c);assert.ok(st.agents.some(a=>a.alive),'survival '+seed+' '+c.name);assert.ok(st.buildings.warehouse>0,'warehouse '+seed);assert.ok(st.buildings.hut>0,'housing '+seed);assert.ok(st.buildings.farm>0,'farms '+seed);}assert.equal(worldPopulation(s),40+s.world.settlements.reduce((n,c)=>n+stateOf(s,c).birthCount-stateOf(s,c).deathCount,0));validateSave(s);}
+ for(const seed of [1,2,42,101]){const s=newGame(seed,0);for(let day=0;day<250;day++)tick(s);for(const c of s.world.settlements.filter(c=>c.id===1||c.id===2)){const st=stateOf(s,c);assert.ok(st.agents.some(a=>a.alive),'survival '+seed+' '+c.name);assert.ok(st.buildings.warehouse>0,'warehouse '+seed);assert.ok(st.buildings.hut>0,'housing '+seed);assert.ok(st.buildings.farm>0,'farms '+seed);}assert.equal(worldPopulation(s),40+s.world.settlements.reduce((n,c)=>n+stateOf(s,c).birthCount-stateOf(s,c).deathCount,0));validateSave(s);}
 });
 
 test('broken vehicle releases its slot, preserves collected cargo and continues home on foot',()=>{
