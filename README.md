@@ -131,3 +131,10 @@ Satu hari = 4 detik; 60 hari = satu tahun. Saat kembali, game menghitung maksima
 ### Memperbarui deployment OpenAI lama
 
 Di Render, ganti env `OPENAI_API_KEY` menjadi `GEMINI_API_KEY`, dan `OPENAI_MODEL` menjadi `GEMINI_MODEL=gemini-3.5-flash-lite`. Hapus env OpenAI lama. Pertahankan `WORLD_TOKEN`. Deploy commit terbaru; Build Command tetap `npm install`, Start Command tetap `npm start`. Penggantian provider tidak mengubah format simpanan atau URL layanan yang sudah ada.
+
+## Versi 0.3: masyarakat dan penemuan
+Warga dapat bersifat egois, serakah, pendendam, agresif, kejam atau manipulatif. Persediaan pribadi, reputasi dan ingatan hubungan memengaruhi berbagi, pencurian, intimidasi, balas dendam serta kerja sama. Konflik mempunyai jeda 10 hari; anak tidak menjadi sasaran.
+
+Penelitian menghabiskan bahan untuk prototipe lalu menguji pada tindakan penelitian berikutnya. Kayu, batu, tulang, serat, bentuk mata dan sambungan menentukan massa, daya tahan, potensi hasil dan risiko. Warga mencatat kegagalan, mengubah komponen dan meniru rancangan berhasil. Alat dipakai otomatis untuk kayu, batu dan ladang; aus dan perlu diganti. Ini fisika sederhana dalam satuan game, bukan mesin fisika 3D atau penemuan objek tanpa batas. Gemini tetap hanya untuk rancangan intervensi dunia.
+
+Simpanan versi 1 dan 2 dimigrasikan ke versi 3 tanpa menghapus progres atau bobot Q lama. Render tetap memakai `npm start`; tidak ada variabel lingkungan baru.
