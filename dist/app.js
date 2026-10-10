@@ -1,3 +1,4 @@
+import {settlementGroups} from './menu-groups.js';
 import {combatStats,SPECIES} from './wildlife.js';
 import {equipmentStorage} from './storage.js';
 import {housingCapacity} from './shelter.js';
@@ -13,14 +14,15 @@ import {stateOf,stageName,DISCOVERIES,discoveryStatus} from './world.js';
 import {camera,drawWorld,pan,zoom,focus,hit,hitResource,hitStock} from './map.js';
 import {localDraft,describeEffect,OBJECT_LABELS,validateDescriptor} from './world-schema.js';
 import {DAY_MS,OFFLINE_CAP,newGame,population,capacity,era,tick,advance,observation,available,epsilon,row,startProject,BUILDINGS,LABELS,POLICIES,validateSave,log,TRAITS,efficiency,expertise,traitBonus,buildingNeeds,applyObject,goal,needBonus} from './engine.js';
-const $=id=>document.getElementById(id),KEY='peradaban-save-v1',fmt=n=>Math.floor(n).toLocaleString('id-ID');
+let renderCiv=null,renderTargets=null;
+const $=id=>renderTargets?.[id]||document.getElementById(id),KEY='peradaban-save-v1',fmt=n=>Math.floor(n).toLocaleString('id-ID');
 let state,focusId=1,pendingTarget=1,selected=null,speed=1,previous=Date.now(),saveAt=0,renderAt=0,storageFailed=false,blockedRestore=false,previousHidden=document.hidden;
 const view=camera(),worldNotices=createNotices();
 let menuOrigin=null,noticeUntil=0,detailCitizen=null;
 function currentRoot(){return state;}
-function focused(){return state.world.settlements.find(c=>c.id===focusId)||state.world.settlements[0];}
+function focused(){if(renderCiv)return renderCiv;return state.world.settlements.find(c=>c.id===focusId)||state.world.settlements[0];}
 function viewState(){return stateOf(state,focused());}
-function selectCivilization(id,center=true){focusId=Number(id);selected=null;detailCitizen=null;if(center)focus(view,focused());render();}
+function selectCivilization(id,center=true){focusId=Number(id);selected=null;detailCitizen=null;revealMenuSettlement=focusId;if(center)focus(view,focused());render();}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function notice(text){$('notice').textContent=text;$('notice').hidden=false;noticeUntil=Date.now()+8000;}
 function error(text){$('error').textContent=text;$('error').hidden=!text;}
@@ -39,22 +41,23 @@ function load(){
  persist();
 }
 function meter(value){const t=el('div',undefined,'track'),f=el('div',undefined,'fill');f.style.width=Math.min(100,Math.max(0,value))+'%';t.append(f);return t;}
-function resource(label,value,detail){const r=el('div',undefined,'resource');r.append(el('span',label),el('strong',value),el('small',detail));return r;}
 function showBuildings(){
  const state=viewState();
  $('project').replaceChildren();if(state.project){const b=BUILDINGS[state.project.key],p=el('div',undefined,'project');p.append(el('strong',b.name+' sedang dibangun'),meter(state.project.progress/state.project.required*100),el('small',`${Math.floor(state.project.progress)} / ${state.project.required} kerja`));$('project').append(p);}
- $('buildings').replaceChildren();for(const [key,b]of Object.entries(BUILDINGS)){const block=el('div',undefined,'building'),head=el('div');head.append(el('strong',b.name),el('small','× '+state.buildings[key]));block.append(head,el('p',b.tip),el('small',Object.entries(buildingCost(b)).map(([k,v])=>v+' '+resourceName(k)).join(' · ')+` · ${b.work} kerja`)); const need=buildingNeeds(state).find(n=>n.key===key)||{score:0};block.append(el('small',b.requires&&!known(state,b.requires)?'Prasyarat: '+DISCOVERIES[b.requires].name:need.score>0?'Kebutuhan warga: '+need.reason:'Kebutuhan saat ini tercukupi.'));$('buildings').append(block);}
+ const needs=buildingNeeds(state);
+ $('buildings').replaceChildren(inventoryTable('Bangunan · '+focused().name,['Bangunan','Jumlah','Biaya','Kebutuhan'],Object.entries(BUILDINGS).map(([key,b])=>{const need=needs.find(n=>n.key===key)||{score:0};return [b.name,state.buildings[key],Object.entries(buildingCost(b)).map(([k,v])=>v+' '+resourceName(k)).join(' · '),b.requires&&!known(state,b.requires)?'Prasyarat: '+DISCOVERIES[b.requires].name:need.score>0?need.reason:'Tercukupi'];})));
+
 }
 function showAgents(){
- const state=viewState(),agents=$('agent-filter').value==='all'?state.agents:population(state),table=el('table',undefined,'people-table'),thead=el('thead'),header=el('tr'),body=el('tbody');
+ const civ=focused(),state=viewState(),agents=$('agent-filter').value==='all'?state.agents:state.agents.filter(a=>a.alive),table=el('table',undefined,'people-table'),thead=el('thead'),header=el('tr'),body=el('tbody');
  for(const label of ['Nama','Sedang apa','Pekerjaan','Umur','Info'])header.append(el('th',label));thead.append(header);table.append(thead,body);
- for(const a of agents){const row=el('tr');row.append(el('td',a.name),el('td',a.alive?(a.away?'Ekspedisi':a.journey?`${LABELS[a.action]} · ${a.journey.phase==='return'?'Pulang':a.journey.phase==='harvest'?'Mengambil resource':a.journey.phase==='camp'?'Di front':'Berangkat'}`:LABELS[a.action]):a.exitReason==='emigration'?'Pindah':'Meninggal'),el('td',profession(state,a,focused())),el('td',a.age+' tahun'));const cell=el('td'),button=el('button','Detail');button.setAttribute('aria-label','Detail '+a.name);button.onclick=()=>{detailCitizen=a.id;showCitizenDetail();$('agent-detail-close').focus();$('agent-detail').scrollIntoView({behavior:'smooth',block:'nearest'});};cell.append(button);row.append(cell);body.append(row);}
+ for(const a of agents){const row=el('tr');row.append(el('td',a.name),el('td',a.alive?(a.away?'Ekspedisi':a.journey?`${LABELS[a.action]} · ${a.journey.phase==='return'?'Pulang':a.journey.phase==='harvest'?'Mengambil resource':a.journey.phase==='camp'?'Di front':'Berangkat'}`:LABELS[a.action]):a.exitReason==='emigration'?'Pindah':'Meninggal'),el('td',profession(state,a,civ)),el('td',a.age+' tahun'));const cell=el('td'),button=el('button','Detail');button.setAttribute('aria-label','Detail '+a.name);button.onclick=()=>{selectCivilization(civ.id,false);detailCitizen=a.id;showCitizenDetail();$('agent-detail-close').focus();$('agent-detail').scrollIntoView({behavior:'smooth',block:'nearest'});};cell.append(button);row.append(cell);body.append(row);}
  const scroll=$('agents').scrollLeft;$('agents').replaceChildren(table);$('agents').scrollLeft=scroll;
- if(!agents.length)$('agents').append(el('p','Tidak ada penduduk aktif.'));showCitizenDetail();
+ if(!agents.length)$('agents').append(el('p','Tidak ada penduduk aktif.'));
 }
 function showCitizenDetail(){
  const state=viewState(),a=state.agents.find(a=>a.id===detailCitizen);$('agent-detail').hidden=!a;$('agent-detail-content').replaceChildren();if(!a)return;
- $('agent-detail-name').textContent='Detail '+a.name;const locations=equipmentStorage(state);
+ $('agent-detail-name').textContent='Detail '+a.name+' · '+focused().name;const locations=equipmentStorage(state);
  const c=el('div',undefined,'agent'),head=el('header'),text=el('div');text.append(el('strong',a.name),el('small',`${a.age} tahun${a.alive?'':' · arsip'}`));head.append(el('div',a.name.charAt(0),'portrait'),text);c.append(head,el('div',a.alive?(a.away?'Sedang ekspedisi':(a.age<16?'Tumbuh · ':'')+LABELS[a.action]):a.exitReason==='emigration'?'Pindah permukiman':'Kehidupan selesai','action'));const bars=el('div',undefined,'bars');for(const [label,value]of [['Kesehatan',a.health],['Energi',a.energy],['Suasana hati',a.mood]]){const b=el('div');b.append(el('label',`${label} ${Math.round(value)}%`),meter(value));bars.append(b);}c.append(el('small',profession(state,a,focused())),el('small',ideologyName(a)),el('small',Object.entries(BELIEFS).map(([k,label])=>label+' '+Math.round(a.ideology[k])).join(' · ')));c.append(el('small',a.traits.map(k=>TRAITS[k].name).join(' · '),'trait-tags'));const skilled=Object.entries(a.skills).filter(([k,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);c.append(el('small',skilled.map(([k,v])=>`${LABELS[k]}: ${expertise(a,k)} (${Math.floor(v)})`).join(' · ')));c.append(el('small',`Reputasi ${Math.round(a.reputation)} · Pribadi: ${fmt(a.stash.food)} pangan, ${fmt(a.stash.wood)} kayu, ${fmt(a.stash.stone)} batu`));c.append(el('small',a.home?'Rumah: '+BUILDINGS[a.home.kind].name+' '+a.home.building+' · Tempat '+a.home.bed:'Tanpa rumah · tidur di luar, pemulihan lebih rendah','housing-state'));if(a.illnessDays)c.append(el('small','Sedang sakit · '+a.illnessDays+' hari','illness-state'));c.append(showEquipmentSlots(state,a,locations));const attributes=el('div',undefined,'attribute-grid');for(const [key,label]of Object.entries(ATTRIBUTES))attributes.append(el('small',label+' '+Math.round(a.attributes[key])));c.append(attributes);const battle=combatStats(state,a);c.append(el('small',`Pertarungan: serangan ${Math.round(battle.attack)} · pertahanan ${Math.round(battle.defense)} · kecepatan ${Math.round(battle.speed)} · latihan bertahan ${Math.floor(a.skills.defend)}, berburu ${Math.floor(a.skills.hunt)}, menghindar ${Math.floor(a.skills.flee)}`));c.append(bars,el('div',`Kepekaan sihir ${a.arcaneSensitivity} · ${fmt(a.steps)} pengalaman · lapar ${Math.round(a.hunger)}%`,'metrics'));const b=el('button','Lihat pembelajaran →');b.onclick=()=>{selected=a.id;$('inspect').value=String(a.id);showModel();openMenu('learning');$('model').scrollIntoView({behavior:'smooth',block:'center'});};c.append(b);$('agent-detail-content').append(c);
 }
 $('agent-detail-close').onclick=()=>{detailCitizen=null;showCitizenDetail();};
@@ -63,7 +66,7 @@ function showEquipmentSlots(s,a,locations){
  for(const [slot,label]of [['wood','Penebangan'],['stone','Penggalian'],['farm','Pertanian'],['weapon','Senjata'],['armor','Pelindung'],['vehicle','Kendaraan']]){
   const category=slot==='weapon'?'weapons':slot==='armor'?'armors':slot==='vehicle'?'vehicles':'tools',id=slot==='vehicle'?a.journey?.vehicle:a.equipment[slot],item=s[category].find(item=>item.id===id),cell=el('div',undefined,'equipment-slot');cell.append(el('small',label));
   if(!item){cell.append(el('span','Kosong'));}else{const name=category==='tools'?item.name:category==='weapons'?{stone:'Senjata batu',metal:'Senjata logam',ballistic:'Senjata balistik'}[item.type]:category==='armors'?ARMORS[item.type].name:VEHICLE_NAMES[item.type],max=category==='tools'?item.physics.durability:100;
-   const using=category==='tools'?a.action===slot:slot==='weapon'?a.action==='defend':!!a.journey;
+   const using=category==='tools'?a.action===slot:slot==='weapon'?['defend','hunt'].includes(a.action):!!a.journey;
    const place=locations.stored[category].has(id)?'Di gudang':locations.carried[category].has(id)?using?'Digunakan':'Dibawa':'Di tanah';
    cell.append(el('strong',name),el('small',Math.round(item.condition/max*100)+'% · '+place),el('small','Daya tahan '+Math.round(category==='tools'?max:(category==='weapons'?WEAPONS:category==='armors'?ARMORS:VEHICLES)[item.type].durability)+' · '+item.uses+'× pakai'));cell.setAttribute('title',name+' · Ketahanan '+item.condition.toFixed(1)+'/'+max+(category==='tools'?'':' · Daya tahan '+(category==='weapons'?WEAPONS:category==='armors'?ARMORS:VEHICLES)[item.type].durability));
   }grid.append(cell);
@@ -74,7 +77,7 @@ function showModel(){
  const a=state.agents.find(a=>a.id===selected)||population(state)[0]||state.agents.at(-1);$('model').replaceChildren();if(!a)return;selected=a.id;$('inspect').value=String(a.id);
  for(const m of a.memories.slice(0,4))$('model').append(el('small',`Hari ${m.day}: ${m.name} · ${{theft:'pencurian',intimidation:'intimidasi',revenge:'balas dendam',help:'bantuan',manipulation:'manipulasi',hostility:'permusuhan',dispute:'perselisihan',friendship:'pertemanan'}[m.kind]||m.kind}`));
  const agenda=goal(state);const stateKey=observation(state,a),values=row(a,stateKey),allowed=available(state,a),ranked=allowed.slice().sort((x,y)=>values[y]+traitBonus(a,y)+needBonus(state,a,y,agenda)-values[x]-traitBonus(a,x)-needBonus(state,a,x,agenda));const max=Math.max(1,...allowed.map(k=>Math.abs(values[k])));
- $('model').append(el('small',`${a.name} · eksplorasi ${Math.round(epsilon(a)*100)}% · ${Object.keys(a.q).length} situasi dikenal`),el('p',`Situasi kini: ${a.hunger>=55?'lapar':'cukup kenyang'}, ${a.energy<35?'energi rendah':'energi cukup'}, ${a.health<45?'kesehatan rendah':'kesehatan cukup'}, ${a.home?'punya rumah':'tanpa rumah'}, ${state.buildings.farm?'ada ladang':'belum ada ladang'}${a.journey?' · perjalanan '+a.journey.phase+' · bekal '+fmt(a.journey.provisions):''}.`));
+ $('model').append(el('small',`${focused().name} · ${a.name} · eksplorasi ${Math.round(epsilon(a)*100)}% · ${Object.keys(a.q).length} situasi dikenal`),el('p',`Situasi kini: ${a.hunger>=55?'lapar':'cukup kenyang'}, ${a.energy<35?'energi rendah':'energi cukup'}, ${a.health<45?'kesehatan rendah':'kesehatan cukup'}, ${a.home?'punya rumah':'tanpa rumah'}, ${state.buildings.farm?'ada ladang':'belum ada ladang'}${a.journey?' · perjalanan '+a.journey.phase+' · bekal '+fmt(a.journey.provisions):''}.`));
  if(a.tripCredit)$('model').append(el('small',`Hasil perjalanan akan memperbarui keputusan ${LABELS[a.tripCredit.action]}: ${a.tripCredit.days} hari, nilai sementara ${a.tripCredit.reward.toFixed(1)}.`));
  for(const key of ranked){const r=el('div',undefined,'model-row'+(key===ranked[0]?' best':''));r.append(el('span',LABELS[key]),el('strong',(values[key]+traitBonus(a,key)+needBonus(state,a,key,agenda)).toFixed(2)),meter(Math.abs(values[key])/max*100));$('model').append(r);}
  $('model').append(el('small',`Pengalaman, sifat, dan kebutuhan desa biasanya dipilih; eksplorasi masih dapat memilih tindakan lain. Hadiah terakhir: ${a.lastReward.toFixed(1)}.`));
@@ -85,6 +88,89 @@ function showObjects(){
 }
 function drawMap(time){const canvas=$('world'),rect=canvas.getBoundingClientRect();const width=Math.max(1,Math.round(rect.width)),height=Math.max(1,Math.round(rect.height));if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}drawWorld(state,view,$('world'),focusId,time);}
 function drawChart(){const state=viewState();const c=$('chart'),ctx=c.getContext('2d'),data=state.history;ctx.clearRect(0,0,c.width,c.height);const max=Math.max(30,...data.map(h=>h.food));ctx.strokeStyle='#2e4035';for(let i=0;i<4;i++){const y=20+i*45;ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(590,y);ctx.stroke();}ctx.font='12px system-ui';ctx.fillStyle='#9aae9b';if(data.length<2){ctx.fillText('Grafik tersedia setelah 20 hari.',15,100);return;}ctx.beginPath();data.forEach((h,i)=>{const x=12+i/(data.length-1)*575,y=170-h.food/max*145;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.strokeStyle='#afd29b';ctx.lineWidth=3;ctx.stroke();$('chart-caption').textContent=`Hari ${fmt(data[0].day)}–${fmt(data.at(-1).day)} · rentang 0–${fmt(max)} makanan`;}
+
+let groupedWorld=null,revealMenuSettlement=1;
+const menuTrees=new Map();
+const groupedCategories=[
+ {id:'people',target:'agents',fields:[['agents','div','people-table-scroll']],show:showAgents},
+ {id:'resources',target:'resources',fields:[['warehouse-title','h3'],['warehouse-status','p'],['resources','div'],['warehouse-custom','div'],['tools','div']],show:()=>{showWarehouse();showTools();}},
+ {id:'buildings',target:'buildings',fields:[['project','div'],['buildings','div']],show:showBuildings},
+ {id:'development',target:'discoveries',fields:[['discoveries','div'],['custom-resources','div']],show:showDiscoveries},
+ {id:'flow',target:'flows',fields:[['flow-goal','p'],['flows','div']],show:showFlow},
+ {id:'culture',target:'government',fields:[['government','div'],['language','div']],show:showCulture},
+ {id:'policy',target:'group-policy',fields:[['group-policy','div']],show:showSettlementPolicy},
+ {id:'learning',target:'group-learning',fields:[['group-learning','div']],show:showSettlementLearning},
+ {id:'journal',target:'logs',fields:[['logs','div']],show:showSettlementJournal},
+ {id:'trends',target:'group-trends',fields:[['chart','canvas'],['chart-caption','p']],show:drawChart}
+];
+function groupBranch(level,key){
+ const node=el('details',undefined,'menu-group menu-group-'+level),summary=el('summary'),content=el('div',undefined,'group-content');
+ node.dataset.groupLevel=level;node.dataset.groupKey=key;node.append(summary,content);return {node,summary,content};
+}
+function renderSettlementLeaf(config,leaf){
+ if(!leaf.path.every(branch=>branch.node.open))return;
+ const civ=state.world.settlements.find(c=>c.id===leaf.civId);if(!civ)return;
+ if(document.activeElement?.tagName==='SELECT'&&leaf.content.contains?.(document.activeElement))return;
+ const scrolls=new Map([...leaf.content.querySelectorAll('.inventory-scroll')].map(n=>[n.getAttribute('aria-label'),n.scrollLeft]));
+ const oldCiv=renderCiv,oldTargets=renderTargets;renderCiv=civ;renderTargets=leaf.targets;
+ try{config.show();for(const n of leaf.content.querySelectorAll('.inventory-scroll'))n.scrollLeft=scrolls.get(n.getAttribute('aria-label'))||0;}finally{renderCiv=oldCiv;renderTargets=oldTargets;}
+}
+function showGroupedMenus(){
+ if(groupedWorld!==state){menuTrees.clear();groupedWorld=state;revealMenuSettlement=focusId;}
+ const groups=settlementGroups(state);
+ for(const config of groupedCategories){
+  let tree=menuTrees.get(config.id);if(!tree){tree={branches:new Map(),leaves:new Map(),stamp:null};menuTrees.set(config.id,tree);}
+  const roots=[],stamp=[];for(const b of tree.branches.values())b.nextChildren=null;
+  const branch=(level,key)=>{let b=tree.branches.get(key);if(!b){b=groupBranch(level,key);b.node.ontoggle=()=>{for(const leaf of tree.leaves.values())renderSettlementLeaf(config,leaf);};tree.branches.set(key,b);}return b;};
+  for(const group of groups){
+   const government=branch('government','government:'+group.id),regions=[];
+   government.summary.textContent='Pemerintahan '+group.leader.name+' · '+GOVERNMENTS[group.leader.government.type]+' · '+group.population+' warga';
+   for(const region of group.regions){
+    const district=branch('region','region:'+group.id+':'+region.id),settlements=[];
+    district.summary.textContent=region.name+' · '+region.members.length+' permukiman · '+region.population+' warga';
+    for(const civ of region.members){
+     let leaf=tree.leaves.get(civ.id);
+     if(!leaf){
+      const b=groupBranch('settlement','settlement:'+civ.id),targets={};b.node.dataset.settlementId=String(civ.id);
+      const mapButton=el('button','Lihat di peta','settlement-focus');mapButton.onclick=()=>selectCivilization(civ.id);b.content.append(mapButton);
+      for(const [id,tag,cls]of config.fields){const node=el(tag,undefined,cls);node.dataset.field=id;if(tag==='canvas'){node.width=600;node.height=190;node.setAttribute('aria-label','Grafik pangan '+civ.name);}targets[id]=node;b.content.append(node);}
+      leaf={...b,targets,civId:civ.id,path:[]};tree.leaves.set(civ.id,leaf);
+      leaf.node.ontoggle=()=>renderSettlementLeaf(config,leaf);
+     }
+     leaf.path=[government,district,leaf];const s=stateOf(state,civ);
+     leaf.summary.textContent=civ.name+' · '+s.agents.filter(a=>a.alive).length+' warga'+(civ.id===focusId?' · di peta':'');
+     if(revealMenuSettlement===civ.id)for(const b of leaf.path)b.node.open=true;
+     settlements.push(leaf.node);stamp.push(group.id+':'+region.id+':'+civ.id);
+    }
+    regions.push(district.node);
+    district.nextChildren=settlements;
+   }
+   government.nextChildren=regions;roots.push(government.node);
+  }
+  const signature=stamp.join('|');
+  if(tree.stamp!==signature){
+   for(const b of tree.branches.values())if(b.nextChildren)b.content.replaceChildren(...b.nextChildren);
+   $(config.target).replaceChildren(...roots);tree.stamp=signature;
+  }
+  for(const leaf of tree.leaves.values())renderSettlementLeaf(config,leaf);
+ }
+ revealMenuSettlement=null;
+}
+function showSettlementPolicy(){
+ const civ=focused(),s=viewState(),select=el('select');select.setAttribute('aria-label','Prioritas '+civ.name);select.disabled=blockedRestore;
+ for(const [key,label]of Object.entries(POLICIES)){const option=el('option',label);option.value=key;select.append(option);}select.value=s.policy;
+ select.onchange=()=>{if(blockedRestore)return;catchUp();const target=stateOf(state,civ);target.policy=select.value;log(target,'Prioritas berubah: '+POLICIES[target.policy]+'.');persist();render();};
+ $('group-policy').replaceChildren(el('label','Prioritas '+civ.name),select,el('p',goal(s).reason));
+}
+function showSettlementLearning(){
+ const civ=focused(),s=viewState(),table=el('table',undefined,'people-table'),head=el('thead'),header=el('tr'),body=el('tbody');
+ for(const title of ['Nama','Pengalaman','Situasi','Model'])header.append(el('th',title));head.append(header);table.append(head,body);
+ for(const a of s.agents){const tr=el('tr'),cell=el('td'),button=el('button','Periksa');button.onclick=()=>{selectCivilization(civ.id,false);selected=a.id;showModel();$('model').scrollIntoView({behavior:'smooth',block:'nearest'});};cell.append(button);tr.append(el('td',a.name),el('td',fmt(a.steps)),el('td',fmt(Object.keys(a.q).length)),cell);body.append(tr);}
+ const wrap=el('div',undefined,'people-table-scroll');wrap.append(table);$('group-learning').replaceChildren(wrap);
+}
+function showSettlementJournal(){
+ $('logs').replaceChildren(...viewState().logs.map(l=>{const d=el('div',undefined,'log');d.append(el('small','HARI '+l.day),el('p',l.text));return d;}));
+}
 function render(){
  worldNotices.collect(currentRoot());if($('menu-drawer').hidden)showNotification();if(Date.now()>=noticeUntil)$('notice').hidden=true;
  const root=currentRoot();const state=viewState();showCivilizations(root);
@@ -93,11 +179,10 @@ function render(){
  $('pause').disabled=blockedRestore;$('policy').disabled=blockedRestore;
  $('pause').textContent=root.paused?'Lanjutkan':'Jeda';$('world-status').textContent=!active.length?'Permukiman berakhir':root.paused?'Waktu dijeda':'Penduduk beraktivitas';$('policy').value=state.policy;
  $('population').textContent=`${active.length} di desa · ${state.agents.filter(a=>a.alive&&a.away).length} kru / ${capacity(state)} tempat`;
- showWarehouse();
- showBuildings();showAgents();showObjects();showTools();showDiscoveries();showFlow();showCulture();
+ showGroupedMenus();showCitizenDetail();showObjects();
  $('learning-stats').replaceChildren();for(const [label,value]of [['Keputusan dipelajari',fmt(state.totalSteps)],['Situasi dikenal',fmt(all.reduce((n,a)=>n+Object.keys(a.q).length,0))],['Pilihan eksplorasi',Math.round(all.reduce((n,a)=>n+a.explorations,0)/Math.max(1,steps)*100)+'%'],['Rata-rata hadiah',(all.reduce((n,a)=>n+a.rewardSum,0)/Math.max(1,steps)).toFixed(1)]]){const b=el('div');b.append(el('strong',value),el('small',label));$('learning-stats').append(b);}
- const options=all.map(a=>el('option',a.name+(a.alive?'':' · arsip')));options.forEach((o,i)=>o.value=String(all[i].id));$('inspect').replaceChildren(...options);showModel();drawChart();
- $('logs').replaceChildren(...state.logs.map(l=>{const d=el('div',undefined,'log');d.append(el('small','HARI '+l.day),el('p',l.text));return d;}));
+ const options=all.map(a=>el('option',a.name+(a.alive?'':' · arsip')));options.forEach((o,i)=>o.value=String(all[i].id));$('inspect').replaceChildren(...options);showModel();
+
 }
 function catchUp(now=Date.now()){
  const elapsed=Math.max(0,now-previous);previous=now;
@@ -109,7 +194,7 @@ function catchUp(now=Date.now()){
 $('pause').onclick=()=>{catchUp();state.paused=!state.paused;persist();render();};
 $('speed').onchange=()=>{catchUp();speed=Number($('speed').value);};
 $('policy').onchange=()=>{catchUp();const target=viewState();target.policy=$('policy').value;log(target,'Prioritas berubah: '+POLICIES[target.policy]+'.');persist();render();};
-$('agent-filter').onchange=showAgents;$('inspect').onchange=()=>{selected=Number($('inspect').value);showModel();};
+$('agent-filter').onchange=showGroupedMenus;$('inspect').onchange=()=>{selected=Number($('inspect').value);showModel();};
 $('export').onclick=()=>{let content;if(blockedRestore){try{content=localStorage.getItem(KEY);}catch{}}if(!content){persist();content=JSON.stringify(state,null,2);}const url=URL.createObjectURL(new Blob([content],{type:'application/json'})),a=el('a');a.href=url;a.download='peradaban-hari-'+state.day+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('import-button').onclick=()=>$('import').click();$('import').onchange=async()=>{const f=$('import').files[0];try{if(!f)return;if(f.size>64*1024*1024)throw Error('File terlalu besar (maksimal 64 MB).');const candidate=validateSave(JSON.parse(await f.text()));if(!confirm('Ganti dunia saat ini dengan simpanan ini? Unduh cadangan dulu jika ingin menyimpan dunia lama.'))return;state=candidate;worldNotices.reset(state);closeMenu();focusId=1;focus(view,focused());state.lastSaved=Date.now();previous=Date.now();selected=null;detailCitizen=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();render();notice('Simpanan dan model belajar berhasil diimpor. Waktu di dalam file dipulihkan tanpa menambah waktu berlalu.');}catch(e){error(e.message||'File tidak valid.');}finally{$('import').value='';}};
 $('new').onclick=()=>{if(!confirm('Mulai dunia baru? Unduh simpanan terlebih dahulu jika ingin mempertahankan dunia ini.'))return;state=newGame();worldNotices.reset(state);closeMenu();focusId=1;focus(view,focused());previous=Date.now();selected=null;detailCitizen=null;pendingObject=null;$('draft-preview').hidden=true;storageFailed=false;blockedRestore=false;error('');persist();$('notice').hidden=true;render();};
@@ -146,11 +231,9 @@ function showWarehouse(){
  const civ=focused(),stock=warehouseStock(state,civ);
  const s=viewState();$('warehouse-title').textContent=(s.buildings.warehouse?'Gudang ':'Tumpukan di tanah · ')+civ.name;
  $('warehouse-status').textContent=s.buildings.warehouse+' gudang · '+s.agents.filter(a=>a.alive&&!a.home).length+' tanpa rumah / '+housingCapacity(s)+' tempat · Pengetahuan '+fmt(s.tech)+' · Keharmonisan '+Math.round(s.harmony)+'% · '+s.birthCount+' lahir · '+s.immigrationCount+' datang · '+s.emigrationCount+' pindah · '+s.deathCount+' meninggal';
- $('resources').replaceChildren(...Object.entries(stock.resources).map(([key,value])=>resource(STOCK_NAMES[key].toUpperCase(),fmt(value),stock.ground[key]>0?fmt(stock.stored[key])+' gudang · '+fmt(stock.ground[key])+' tanah':'Tersimpan')));
+ $('resources').replaceChildren(inventoryTable('Persediaan · '+civ.name,['Bahan','Gudang','Tanah','Total'],Object.entries(stock.resources).map(([key,value])=>[STOCK_NAMES[key],fmt(stock.stored[key]),fmt(stock.ground[key]),fmt(value)])));
  $('warehouse-custom').replaceChildren();if(stock.custom.length)$('warehouse-custom').append(inventoryTable('Bahan khusus',['Bahan','Gudang','Tanah'],stock.custom.map(r=>[r.name,fmt(r.stored),fmt(r.ground)])));
- const total=warehouseStock(state,civ,'polity'),leader=state.world.settlements.find(c=>c.id===civ.polityId)||civ;
- $('polity-stock').replaceChildren(el('p',leader.name+' · '+total.members.length+' permukiman · '+total.warehouses+' gudang di seluruh planet'),inventoryTable('Persediaan pemerintah',['Bahan','Gudang','Tanah'],[...Object.entries(total.resources).map(([key])=>[STOCK_NAMES[key],fmt(total.stored[key]),fmt(total.ground[key])]),...total.custom.map(r=>[r.name,fmt(r.stored),fmt(r.ground)])]));
- for(const member of total.members){const button=el('button',(stateOf(state,member).buildings.warehouse?'Gudang ':'Tanah · ')+member.name,'warehouse-link');button.onclick=()=>selectCivilization(member.id);$('polity-stock').append(button);}
+
 }
 function showTools(){
  const s=viewState(),groups=[['tools','Alat kerja'],['weapons','Senjata'],['armors','Pelindung'],['vehicles','Kendaraan']].map(([category,title])=>({category,title,rows:equipmentRows(s,category)}));
@@ -177,7 +260,14 @@ function showCivilizations(root){
 }
 function showDiscoveries(){const civ=focused(),s=viewState();$('discoveries').replaceChildren(el('p',civ.magic?'Sihir dipakai untuk pemulihan warga dan membantu proyek.':`Sihir: pengamatan ${Math.min(60,civ.magicProgress)}/60. Perlu sumber dekat, warga peka ≥75, keahlian penelitian ≥20, dan pengetahuan ≥40.`));
  $('discoveries').append(el('p',civ.studies.length+' proyek paralel · faktor koordinasi '+(1+.15*Math.max(0,civ.studies.length-1)).toFixed(2)+'×. Setiap fasilitas menampung 2 peneliti per hari.'));
- for(const [branch,info]of Object.entries(RESEARCH_BRANCHES)){const group=el('details'),summary=el('summary',info.name+' · '+s.buildings[info.facility]+' fasilitas');group.open=civ.studies.some(p=>DISCOVERIES[p.id].branch===branch);group.append(summary);for(const [id,d]of Object.entries(DISCOVERIES).filter(([,d])=>d.branch===branch)){const done=civ.discoveries.includes(id),p=civ.studies.find(p=>p.id===id),status=discoveryStatus(state,civ,id),item=el('div',undefined,'discovery'+(done?' done':''));item.append(el('strong',(done?'✓ ':'')+d.name),el('small',done?'Dikuasai':p?`Riset ${p.progress.toFixed(1)} / ${p.required} kerja · ${p.workers.length} peneliti hari ini / ${p.lastWorkers.length} kemarin`:status.missing.join(' · ')||'Siap; menunggu tenaga riset'),el('small',RESEARCH_EFFECTS[id]),el('small','Biaya: '+Object.entries(d.cost).map(([k,v])=>k+' '+v).join(' · ')));group.append(item);}$('discoveries').append(group);}
+ const opened=$('discoveries').branchState??=new Map();
+ for(const [branch,info]of Object.entries(RESEARCH_BRANCHES)){
+  const group=el('details'),summary=el('summary',info.name+' · '+s.buildings[info.facility]+' fasilitas');group.dataset.branch=branch;
+  group.open=opened.has(branch)?opened.get(branch):civ.studies.some(p=>DISCOVERIES[p.id].branch===branch);group.ontoggle=()=>opened.set(branch,group.open);group.append(summary);
+  const rows=Object.entries(DISCOVERIES).filter(([,d])=>d.branch===branch).map(([id,d])=>{const done=civ.discoveries.includes(id),p=civ.studies.find(p=>p.id===id),status=discoveryStatus(state,civ,id);return [d.name,done?'Dikuasai':p?`Riset ${p.progress.toFixed(1)} / ${p.required} · ${p.workers.length} peneliti`:status.missing.join(' · ')||'Siap',RESEARCH_EFFECTS[id],Object.entries(d.cost).map(([k,v])=>resourceName(k)+' '+v).join(' · ')];});
+  group.append(inventoryTable(info.name,['Penemuan','Status','Manfaat','Biaya'],rows));$('discoveries').append(group);
+ }
+
  $('discoveries').append(el('small',civ.flight?`${civ.flight.phase==='return'?'Kru kembali dari':'Ekspedisi menuju'} ${state.world.planets[civ.flight.destination].name}: ${civ.flight.remaining} hari. Kru: ${civ.flight.crew.map(id=>s.agents.find(a=>a.id===id)?.name).join(', ')}. Bekal ${civ.flight.cargo.food.toFixed(1)}.`:`Pengamatan radio ${Math.min(100,civ.signalProgress)}/100 · ${civ.ship?'Perakitan wahana '+civ.ship.progress.toFixed(1)+'/'+civ.ship.required:civ.expeditionPlan?'Mengumpulkan bahan dan kru':'Belum ada wahana disiapkan'}`));
  $('custom-resources').replaceChildren(...s.customResources.map(r=>{const item=el('div',undefined,'world-object');item.append(el('strong',r.name),el('small',`${fmt(r.stock)} di alam · ${r.amount.toFixed(1)} terkumpul · ${r.category}`),el('small',`Energi ${r.energy} · Sihir ${r.arcane} · Riset ${r.research} · Toksisitas ${r.toxicity}`));return item;}));
  for(const e of state.world.events.filter(e=>e.civ===civ.id))$('custom-resources').append(el('p',`${e.descriptor.name}: ${e.active?e.remaining+' hari tersisa':'menunggu '+e.descriptor.trigger}`));

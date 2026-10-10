@@ -7,6 +7,11 @@ import {DAY_MS} from '../engine.js';
 const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
 const KEY='peradaban-save-v1';
 class Node {constructor(){this.children=[];this.style={};this.dataset={};this.attributes={};this.value='';this.files=[];this.hidden=false;this.disabled=false;this.width=920;this.height=480;}setAttribute(k,v){this.attributes[k]=v;}focus(){document.activeElement=this;}querySelectorAll(){return [];}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}click(){this.onclick?.();}scrollIntoView(){}addEventListener(event,fn){(this.events||={})[event]=fn;}getBoundingClientRect(){return {left:0,top:0,width:this.width,height:this.height};}setPointerCapture(){}getContext(){return new Proxy({}, {get:()=>()=>{},set:()=>true});}}
+const descendants=node=>[node,...node.children.flatMap(descendants)];
+const settlement=(node,id)=>descendants(node).find(n=>n.dataset.settlementId===String(id));
+const field=(node,name)=>descendants(node).find(n=>n.dataset.field===name);
+const peopleTable=(nodes,id=1)=>field(settlement(nodes.agents,id),'agents').children[0];
+const textOf=node=>descendants(node).map(n=>n.textContent||'').join(' ');
 let serial=0;
 async function boot(raw=null,failStorage=false){
  const nodes=Object.fromEntries([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));nodes['agent-filter'].value='alive';nodes.speed.value='1';nodes.policy.value='balanced';
@@ -18,9 +23,9 @@ async function boot(raw=null,failStorage=false){
  await import('../app.js?test='+serial++);
  return {nodes,store,callbacks,listeners,setTime:n=>now=n,restore(){for(const [key,value] of Object.entries(originals))if(key==='now')Date.now=value;else globalThis[key]=value;}};
 }
-test('UI renders, project starts, pause and save preserve model',async()=>{const b=await boot();try{assert.equal(b.nodes.agents.children[0].children[1].children.length,5);b.callbacks.frame(100);b.setTime(120000);b.callbacks.interval();assert.ok(JSON.parse(b.store.get(KEY)).totalSteps>0);b.setTime(128000);b.callbacks.interval();b.nodes.pause.click();const save=JSON.parse(b.store.get(KEY));assert.equal(save.day,7);assert.equal(save.paused,true);assert.ok(save.agents[0].steps>0);assert.ok(b.nodes.model.children.length>0);}finally{b.restore();}});
+test('UI renders, project starts, pause and save preserve model',async()=>{const b=await boot();try{assert.equal(peopleTable(b.nodes).children[1].children.length,5);b.callbacks.frame(100);b.setTime(120000);b.callbacks.interval();assert.ok(JSON.parse(b.store.get(KEY)).totalSteps>0);b.setTime(128000);b.callbacks.interval();b.nodes.pause.click();const save=JSON.parse(b.store.get(KEY));assert.equal(save.day,7);assert.equal(save.paused,true);assert.ok(save.agents[0].steps>0);assert.ok(b.nodes.model.children.length>0);}finally{b.restore();}});
 test('corrupt save is kept and recoverable through new world',async()=>{const original='{broken';const b=await boot(original);try{b.callbacks.interval();assert.equal(b.store.get(KEY),original);assert.equal(b.nodes.pause.disabled,true);b.nodes.new.click();assert.equal(JSON.parse(b.store.get(KEY)).version,10);assert.equal(b.nodes.pause.disabled,false);}finally{b.restore();}});
-test('storage unavailable still allows play and reports save problem',async()=>{const b=await boot(null,true);try{b.setTime(100000+DAY_MS*2);b.callbacks.interval();assert.equal(b.nodes.agents.children[0].children[1].children.length,5);assert.ok(b.nodes.error.textContent.includes('Penyimpanan'));assert.ok(b.nodes.date.textContent.includes('Hari 3'));}finally{b.restore();}});
+test('storage unavailable still allows play and reports save problem',async()=>{const b=await boot(null,true);try{b.setTime(100000+DAY_MS*2);b.callbacks.interval();assert.equal(peopleTable(b.nodes).children[1].children.length,5);assert.ok(b.nodes.error.textContent.includes('Penyimpanan'));assert.ok(b.nodes.date.textContent.includes('Hari 3'));}finally{b.restore();}});
 test('hidden time is normal speed and saved without duplication',async()=>{const b=await boot();try{b.nodes.speed.value='16';b.nodes.speed.onchange();document.hidden=true;b.listeners.visibilitychange();b.setTime(104000);document.hidden=false;b.listeners.visibilitychange();assert.equal(JSON.parse(b.store.get(KEY)).day,1);b.callbacks.interval();assert.equal(JSON.parse(b.store.get(KEY)).day,1);}finally{b.restore();}});
 test('import restores trained model and rejects invalid file without replacing state',async()=>{const b=await boot();try{const s=newGame(2,0);s.day=99;for(const c of s.world.settlements)if(c.state)c.state.day=99;b.nodes.import.files=[{size:100,text:async()=>JSON.stringify(s)}];await b.nodes.import.onchange();assert.equal(JSON.parse(b.store.get(KEY)).day,99);b.nodes.import.files=[{size:100,text:async()=>'{oops'}];await b.nodes.import.onchange();assert.equal(JSON.parse(b.store.get(KEY)).day,99);}finally{b.restore();}});
 test('prompt produces preview and applies an object once without planning buildings',async()=>{const b=await boot();try{b.nodes['world-prompt'].value='Sungai di timur';await b.nodes['prompt-form'].onsubmit({preventDefault(){}});assert.equal(b.nodes['draft-preview'].hidden,false);assert.ok(b.nodes['draft-title'].textContent.includes('mode lokal'));b.nodes['apply-object'].click();const saved=JSON.parse(b.store.get(KEY));assert.equal(saved.objects.length,1);assert.equal(saved.objects[0].kind,'river');b.nodes['apply-object'].click();assert.equal(JSON.parse(b.store.get(KEY)).objects.length,1);}finally{b.restore();}});
@@ -36,13 +41,36 @@ test('map overlays toggle from the world while the menu stays closed',async()=>{
 test('stock card opens its warehouse and stock modes keep map controls outside the menu',async()=>{const b=await boot();try{
  b.callbacks.frame(100);
  b.nodes.world.events.pointerdown({pointerId:1,clientX:400,clientY:225});b.nodes.world.events.pointerup({pointerId:1});
- assert.equal(b.nodes['panel-resources'].open,true);assert.equal(b.nodes['menu-drawer'].hidden,false);assert.ok(b.nodes['warehouse-title'].textContent.includes('Lembah Asal'));assert.equal(b.nodes.resources.children.length,11);
+ assert.equal(b.nodes['panel-resources'].open,true);assert.equal(b.nodes['menu-drawer'].hidden,false);assert.ok(textOf(settlement(b.nodes.resources,1)).includes('Lembah Asal'));assert.equal(field(settlement(b.nodes.resources,1),'resources').children[0].children[0].children[2].children.length,11);
  b.nodes['menu-close'].click();b.nodes['stock-mode'].value='polity';b.nodes['stock-mode'].onchange();b.callbacks.frame(200);assert.equal(b.nodes['menu-drawer'].hidden,true);
  b.nodes['stock-mode'].value='off';b.nodes['stock-mode'].onchange();b.callbacks.frame(300);b.nodes.world.events.pointerdown({pointerId:2,clientX:400,clientY:225});b.nodes.world.events.pointerup({pointerId:2});assert.equal(b.nodes['menu-drawer'].hidden,true);
- b.nodes.civilization.value='2';b.nodes.civilization.onchange();assert.ok(b.nodes['warehouse-title'].textContent.includes('Kaum Aster'));assert.equal(b.nodes.resources.children.length,11);
+ b.nodes.civilization.value='2';b.nodes.civilization.onchange();assert.ok(textOf(settlement(b.nodes.resources,2)).includes('Kaum Aster'));assert.equal(field(settlement(b.nodes.resources,2),'resources').children[0].children[0].children[2].children.length,11);
  }finally{b.restore();}});
 
 test('people table keeps conditions behind per-citizen details and clears details when changing villages',async()=>{
  const b=await boot();const text=node=>[node.textContent||'',...node.children.map(text)].join(' ');
- try{const table=b.nodes.agents.children[0],header=table.children[0].children[0],rows=table.children[1].children;assert.deepEqual(header.children.map(c=>c.textContent),['Nama','Sedang apa','Pekerjaan','Umur','Info']);assert.equal(rows.length,5);assert.equal(b.nodes['agent-detail'].hidden,true);assert.ok(!text(table).includes('Kesehatan'));const row=rows[3];row.children[4].children[0].click();assert.equal(b.nodes['agent-detail'].hidden,false);assert.equal(b.nodes['agent-detail-name'].textContent,'Detail '+row.children[0].textContent);assert.ok(text(b.nodes['agent-detail-content']).includes('Kesehatan'));assert.ok(text(b.nodes['agent-detail-content']).includes('Penebangan'));b.nodes['agent-detail-close'].click();assert.equal(b.nodes['agent-detail'].hidden,true);row.children[4].children[0].click();b.nodes.civilization.value='2';b.nodes.civilization.onchange();assert.equal(b.nodes.agents.children[0].children[1].children.length,20);assert.equal(b.nodes['agent-detail'].hidden,true);assert.equal(b.nodes['agent-detail-content'].children.length,0);}finally{b.restore();}
+ try{const table=peopleTable(b.nodes),header=table.children[0].children[0],rows=table.children[1].children;assert.deepEqual(header.children.map(c=>c.textContent),['Nama','Sedang apa','Pekerjaan','Umur','Info']);assert.equal(rows.length,5);assert.equal(b.nodes['agent-detail'].hidden,true);assert.ok(!text(table).includes('Kesehatan'));const row=rows[3];row.children[4].children[0].click();assert.equal(b.nodes['agent-detail'].hidden,false);assert.equal(b.nodes['agent-detail-name'].textContent,'Detail '+row.children[0].textContent+' · Lembah Asal');assert.ok(text(b.nodes['agent-detail-content']).includes('Kesehatan'));assert.ok(text(b.nodes['agent-detail-content']).includes('Penebangan'));b.nodes['agent-detail-close'].click();assert.equal(b.nodes['agent-detail'].hidden,true);row.children[4].children[0].click();b.nodes.civilization.value='2';b.nodes.civilization.onchange();assert.equal(peopleTable(b.nodes,2).children[1].children.length,20);assert.equal(b.nodes['agent-detail'].hidden,true);assert.equal(b.nodes['agent-detail-content'].children.length,0);}finally{b.restore();}
+});
+
+test('categories use government, geographic district and settlement folds without losing collapse state on ticks',async()=>{
+ const b=await boot();try{
+  for(const id of ['agents','resources','discoveries','buildings','flows','government','group-policy','group-learning','logs','group-trends']){
+   const groups=b.nodes[id];assert.equal(groups.children.length,5);assert.equal(groups.children[0].dataset.groupLevel,'government');
+   const district=groups.children[0].children[1].children[0];assert.equal(district.dataset.groupLevel,'region');assert.ok(textOf(district).includes('Daerah Barat Laut'));
+   assert.equal(settlement(groups,1).dataset.groupLevel,'settlement');
+  }
+  const first=settlement(b.nodes.agents,1);first.open=false;first.ontoggle();b.setTime(104000);b.callbacks.interval();assert.equal(settlement(b.nodes.agents,1),first);assert.equal(first.open,false);
+  const second=b.nodes.agents.children[1],district=second.children[1].children[0],leaf=settlement(second,2);
+  second.open=true;district.open=true;leaf.open=true;leaf.ontoggle();assert.equal(peopleTable(b.nodes,2).children[1].children.length,20);
+  b.setTime(108000);b.callbacks.interval();assert.equal(leaf.open,true);assert.equal(first.open,false);
+ }finally{b.restore();}
+});
+test('detail and priority changes use the selected settlement even when citizen IDs overlap',async()=>{
+ const s=newGame(7,100000),b=await boot(JSON.stringify(s));try{
+  b.nodes.civilization.value='2';b.nodes.civilization.onchange();
+  const table=peopleTable(b.nodes,2),row=table.children[1].children[0];row.children[4].children[0].click();
+  assert.ok(b.nodes['agent-detail-name'].textContent.endsWith('Kaum Aster'));
+  const rootLeaf=settlement(b.nodes['group-policy'],1),control=field(rootLeaf,'group-policy').children[1];control.value='knowledge';control.onchange();
+  const saved=JSON.parse(b.store.get(KEY));assert.equal(saved.policy,'knowledge');assert.equal(saved.world.settlements[1].state.policy,'balanced');assert.equal(b.nodes.civilization.value,'2');
+ }finally{b.restore();}
 });
