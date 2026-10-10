@@ -32,3 +32,12 @@ test('a new milestone appears over the world and opens the journal; saved histor
 test('fullscreen map drawing resizes its backing canvas to its displayed bounds',async()=>{const b=await boot();try{b.nodes.world.getBoundingClientRect=()=>({left:0,top:0,width:360,height:620});b.callbacks.frame(100);assert.equal(b.nodes.world.width,360);assert.equal(b.nodes.world.height,620);}finally{b.restore();}});
 
 test('map overlays toggle from the world while the menu stays closed',async()=>{const b=await boot();try{b.nodes['government-overlay'].click();assert.equal(b.nodes['government-overlay'].attributes['aria-pressed'],'false');b.nodes['language-overlay'].click();assert.equal(b.nodes['language-overlay'].attributes['aria-pressed'],'true');b.nodes['resource-overlay'].click();assert.equal(b.nodes['resource-overlay'].attributes['aria-pressed'],'false');assert.equal(b.nodes['menu-drawer'].hidden,true);b.callbacks.frame(200);}finally{b.restore();}});
+
+test('stock card opens its warehouse and stock modes keep map controls outside the menu',async()=>{const b=await boot();try{
+ b.callbacks.frame(100);
+ b.nodes.world.events.pointerdown({pointerId:1,clientX:400,clientY:225});b.nodes.world.events.pointerup({pointerId:1});
+ assert.equal(b.nodes['panel-resources'].open,true);assert.equal(b.nodes['menu-drawer'].hidden,false);assert.ok(b.nodes['warehouse-title'].textContent.startsWith('Gudang '));assert.equal(b.nodes.resources.children.length,11);
+ b.nodes['menu-close'].click();b.nodes['stock-mode'].value='polity';b.nodes['stock-mode'].onchange();b.callbacks.frame(200);assert.equal(b.nodes['menu-drawer'].hidden,true);
+ b.nodes['stock-mode'].value='off';b.nodes['stock-mode'].onchange();b.callbacks.frame(300);b.nodes.world.events.pointerdown({pointerId:2,clientX:400,clientY:225});b.nodes.world.events.pointerup({pointerId:2});assert.equal(b.nodes['menu-drawer'].hidden,true);
+ b.nodes.civilization.value='2';b.nodes.civilization.onchange();assert.ok(b.nodes['warehouse-title'].textContent.includes('Kaum Aster'));assert.equal(b.nodes.resources.children.length,11);
+ }finally{b.restore();}});

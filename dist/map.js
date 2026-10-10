@@ -3,8 +3,9 @@ import {BUILDINGS} from './rules.js';
 import {territory,GOVERNMENTS,LANGUAGE_STAGES} from './civics.js';
 import {population} from './engine.js';
 import {stateOf,stageName} from './world.js';
+import {warehouseStock} from './warehouse.js';
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
-export function camera(width=920,height=480){return {x:1600,y:1000,zoom:.24,width,height,planet:0,layer:'planet',governmentOverlay:true,languageOverlay:false,resourceOverlay:true};}
+export function camera(width=920,height=480){return {x:1600,y:1000,zoom:.24,width,height,planet:0,layer:'planet',governmentOverlay:true,languageOverlay:false,resourceOverlay:true,stockMode:'warehouse',stockCards:[]};}
 export function project(c,x,y){return {x:(x-c.x)*c.zoom+c.width/2,y:(y-c.y)*c.zoom+c.height/2};}
 export function unproject(c,x,y){return {x:(x-c.width/2)/c.zoom+c.x,y:(y-c.height/2)/c.zoom+c.y};}
 export function pan(c,dx,dy){c.x=clamp(c.x-dx/c.zoom,-500,3700);c.y=clamp(c.y-dy/c.zoom,-500,2500);}
@@ -13,8 +14,41 @@ export function focus(c,civ){c.layer='planet';c.planet=civ.planet;c.x=civ.x;c.y=
 export function hit(root,c,x,y){const p=unproject(c,x,y);if(c.layer==='space')return root.world.planets.find(o=>Math.hypot(o.x-p.x,o.y-p.y)<Math.max(100,28/c.zoom));return root.world.settlements.find(o=>o.planet===c.planet&&Math.hypot(o.x-p.x,o.y-p.y)<Math.max(80,25/c.zoom));}
 export function hitResource(root,c,x,y,selected){if(c.layer!=='planet'||!c.resourceOverlay)return null;const p=unproject(c,x,y);return root.world.nodes.filter(n=>n.planet===c.planet&&n.seenBy.includes(selected)).find(n=>Math.hypot(n.x-p.x,n.y-p.y)<14/c.zoom)||null;}
 export function polityColor(id){return ['#8fc5a0','#c6a0de','#e1b16d','#8dbbd9','#de9797','#b9c87d','#95d0c6','#ccadc2'][(id-1)%8];}
+export function hitStock(c,x,y){return c.layer==='planet'&&c.stockMode!=='off'?(c.stockCards||[]).find(card=>x>=card.x&&x<=card.x+card.width&&y>=card.y&&y<=card.y+card.height)||null:null;}
+export function stockCardLayout(root,c,selected){
+ if(c.layer!=='planet'||c.stockMode==='off')return [];
+ const width=Math.min(238,c.width-24),height=126,top=88,bottom=c.height-150,cards=[],seen=new Set();
+ if(width<160||bottom-top<height)return [];
+ const civs=root.world.settlements.filter(civ=>civ.planet===c.planet).sort((a,b)=>(b.id===selected)-(a.id===selected));
+ for(const civ of civs){const p=project(c,civ.x,civ.y);if(p.x<0||p.x>c.width||p.y<top-60||p.y>c.height)continue;
+  if(c.stockMode==='polity'&&seen.has(civ.polityId))continue;
+  const x=clamp(p.x-width/2,12,c.width-width-12),desired=clamp(p.y+38,top,bottom-height);
+  const ys=[desired,desired-height-8,desired+height+8,top];
+  const y=ys.find(y=>y>=top&&y+height<=bottom&&!cards.some(card=>x<card.x+card.width+8&&x+width+8>card.x&&y<card.y+card.height+8&&y+height+8>card.y));
+  if(y===undefined)continue;
+  cards.push({civId:civ.id,x,y,width,height,anchor:p});seen.add(civ.polityId);
+ }
+ return cards;
+}
+const stockNumber=n=>n>=1e6?(n/1e6).toFixed(1)+'jt':n>=1e4?(n/1e3).toFixed(1)+'rb':Math.floor(n).toLocaleString('id-ID');
+function drawStock(root,c,ctx,selected){
+ c.stockCards=stockCardLayout(root,c,selected);
+ for(const card of c.stockCards){const civ=root.world.settlements.find(civ=>civ.id===card.civId),stock=warehouseStock(root,civ,c.stockMode),r=stock.resources;
+  const leader=root.world.settlements.find(member=>member.id===civ.polityId)||civ;
+  const title=(c.stockMode==='polity'?'Pemerintah '+leader.name:'Gudang '+civ.name);
+  ctx.strokeStyle=polityColor(civ.polityId);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(card.anchor.x,card.anchor.y);ctx.lineTo(card.x+card.width/2,card.y);ctx.stroke();
+  ctx.fillStyle='#10201af2';ctx.fillRect(card.x,card.y,card.width,card.height);ctx.strokeRect(card.x,card.y,card.width,card.height);
+  const text=(line,y,color='#d7e9d4',font='11px system-ui')=>{ctx.fillStyle=color;ctx.font=font;ctx.fillText(line,card.x+10,card.y+y,card.width-20);};
+  text(title,19,polityColor(civ.polityId),'bold 12px system-ui');
+  text('Pangan '+stockNumber(r.food)+' · Kayu '+stockNumber(r.wood)+' · Batu '+stockNumber(r.stone),39);
+  text('Bijih '+stockNumber(r.ore)+' · Serat '+stockNumber(r.fiber)+' · Tulang '+stockNumber(r.bone),57);
+  text('Logam '+stockNumber(r.metal)+' · Paduan '+stockNumber(r.alloy),75);
+  text('BB '+stockNumber(r.fuel)+' · Energi '+stockNumber(r.energy)+' · Mana '+stockNumber(r.mana),93);
+  text((c.stockMode==='polity'?stock.members.length+' gudang · ':'')+(stock.custom.length?stock.custom.length+' bahan khusus · ':'')+'Ketuk untuk rincian',114,'#a3b5ab','10px system-ui');
+ }
+}
 export function drawWorld(root,c,canvas,selected,time){
- const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;c.width=w;c.height=h;ctx.clearRect(0,0,w,h);ctx.fillStyle=c.layer==='space'?'#081326':'#152e25';ctx.fillRect(0,0,w,h);
+ const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;c.width=w;c.height=h;c.stockCards=[];ctx.clearRect(0,0,w,h);ctx.fillStyle=c.layer==='space'?'#081326':'#152e25';ctx.fillRect(0,0,w,h);
  const point=(x,y)=>project(c,x,y),circle=(x,y,r,color)=>{const p=point(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(2,r*c.zoom),0,Math.PI*2);ctx.fill();},label=(x,y,text,color='#d7e9d4',size=12)=>{const p=point(x,y);ctx.fillStyle=color;ctx.font=size+'px system-ui';ctx.fillText(text,p.x,p.y);},line=(x1,y1,x2,y2,color,dashed=false)=>{const a=point(x1,y1),b=point(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash(dashed?[6,5]:[]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.setLineDash([]);};
  if(c.layer==='space'){
   for(let i=0;i<120;i++)circle((i*197)%3200,(i*389)%2000,2,'#8097bb');circle(1450,1000,65,'#dfb663');label(1370,1130,'Bintang Aruna');
@@ -47,6 +81,7 @@ export function drawWorld(root,c,canvas,selected,time){
   }
  }
  if(!civs.length)label(1200,900,'Planet belum dihuni. Koloni membutuhkan ekspedisi dan habitat.');
+ drawStock(root,c,ctx,selected);
 }
 
 export function buildingNodes(s,civ){const bases={hut:[-90,-50],farm:[-100,75],well:[0,135],school:[65,55],furnace:[125,-60],workshop:[150,0],generator:[120,100],observatory:[0,-110],shipyard:[-140,-100],habitat:[-30,10]},nodes=[];for(const [kind,count]of Object.entries(s.buildings)){const cols=Math.ceil(Math.sqrt(Math.max(1,count))),[x,y]=bases[kind]||[0,0];for(let i=0;i<count;i++)nodes.push({kind,index:i,x:civ.x+x+(i%cols-(cols-1)/2)*24,y:civ.y+y+(Math.floor(i/cols)-(Math.ceil(count/cols)-1)/2)*23});}return nodes;}

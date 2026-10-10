@@ -22,6 +22,14 @@ Tombol **Batas**, **Bahasa**, **Deposit** tersedia langsung pada layar dunia. Ba
 
 Simpanan versi 1–6 dimigrasikan ke versi 7 tanpa mengulang populasi. Proyek lama mempertahankan persentase progres serta alokasi bahan; jalur baru memerlukan fasilitas untuk pekerjaan selanjutnya. Pengetahuan terdahulu tetap diakui dengan melengkapi prasyarat baru. Untuk mendapatkan awal 20 warga per planet, pilih Dunia baru setelah mengunduh cadangan bila diperlukan.
 
+## Gudang dan tabel peralatan
+
+Panel **Gudang & peralatan** menyatukan stok bersama permukiman dengan tabel alat kerja, senjata dan kendaraan per jenis. Tabel menghitung seluruh rekaman peralatan, dengan jumlah siap, dipakai, prototipe yang menunggu uji, arsip/rusak serta kondisi rata-rata yang layak pakai. Alat dipakai berarti melekat pada warga hidup; kendaraan dipakai berarti dibawa dalam perjalanan. Senjata belum memiliki pemilik tetap. Tabel dapat digeser mendatar di HP.
+
+Pada layar dunia, pilihan **Per gudang / Per pemerintah / Sembunyikan stok** menampilkan angka persediaan dekat permukiman. Kartu dapat diketuk untuk membuka gudang terkait. Mode pemerintah menjumlahkan semua gudang dengan `polityId` yang sama, termasuk gudang di planet lain, dan menampilkan satu kartu per pemerintah pada planet yang sedang dilihat. Panel gudang juga menyediakan rincian gabungan pemerintah dan tombol memilih gudang anggotanya.
+
+Gudang memakai persediaan bersama yang sudah ada, tanpa menyalin stok atau mengubah kepemilikan alat. Stok deposit, milik pribadi, muatan yang belum pulang dan bahan yang telah dialokasikan tidak dihitung sebagai persediaan gudang. Bahan khusus menghitung jumlah terkumpul, bukan stok di alam. Angka besar di peta disingkat; rincian panel memakai angka penuh. Kartu yang tidak muat tanpa bertumpuk disembunyikan; permukiman terpilih mendapat prioritas. Pada layar yang terlalu pendek, gunakan panel gudang.
+
 ## Tampilan utama untuk HP
 
 Dunia memenuhi layar. Kontrol jeda/kecepatan berada di atas, zoom/fokus di sisi peta, dan empat tombol di bawah: Menu, Jelajah, Intervensi, Catatan. Semua detail berada pada menu accordion yang tertutup saat pertama dibuka. Di HP menu muncul dari bawah; desktop menggunakan panel samping. Tombol tutup, area di luar panel, atau Escape mengembalikan peta. Kontrol sentuh mempunyai area tekan minimal 44 piksel.
