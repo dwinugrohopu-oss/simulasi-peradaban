@@ -71,7 +71,7 @@ export function drawWorld(root,c,canvas,selected,time){
   circle(civ.x,civ.y,115,civ.id===selected?'#375b3d':civ.species==='alien'?'#493a60':'#2c4736');circle(civ.x,civ.y,30,civ.species==='alien'?'#c2a0e1':'#e1bc75');label(civ.x-95,civ.y-135,civ.name,civ.id===selected?'#f6e4b7':'#deead7');label(civ.x-95,civ.y-100,territory(root,civ).form+' · '+stageName(civ)+' · '+population(s).length+' warga','#b6c5af',10);
   if(c.languageOverlay)label(civ.x-95,civ.y-165,civ.language.name+' · '+LANGUAGE_STAGES[civ.language.stage],'#c6e3f2',11);
   if(c.governmentOverlay)label(civ.x-95,civ.y-195,GOVERNMENTS[civ.government.type]+' · Kekuatan '+Math.round(civ.government.power),polityColor(civ.polityId),10);
-  if(civ.war)label(civ.x-95,civ.y+155,'PERANG','#ed9f8d',11);else if(civ.magic)label(civ.x-95,civ.y+155,'Sihir dipahami','#c5a8ed',10);
+  if(civ.war)label(civ.x-95,civ.y+155,civ.war.mode==='raid'?'PERAMPOKAN':civ.war.mode==='conquest'?'PENAKLUKAN':'PERANG','#ed9f8d',11);else if(civ.magic)label(civ.x-95,civ.y+155,'Sihir dipahami','#c5a8ed',10);
   const nodes=buildingNodes(s,civ);const countKinds=Object.entries(s.buildings).filter(([key,count])=>count>0);
   if(c.zoom>.3){for(const node of nodes){const p=point(node.x,node.y),z=c.zoom;
    if(node.kind==='farm'){ctx.fillStyle='#b6a75f';ctx.fillRect(p.x-10*z,p.y-8*z,20*z,16*z);for(let row=0;row<3;row++){ctx.fillStyle='#4f6b35';ctx.fillRect(p.x-8*z,p.y+(-5+row*5)*z,16*z,2*z);}}
